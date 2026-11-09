@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="author" content="Luca Loffi">
+<meta name="description" content="Maqueta 3D de una planta de elaboración de viandas (milanesa de pollo con puré o papas españolas): lay-out de 18 × 12 m, equipamiento y recorrido de producción. Trabajo práctico de Equipamiento de Cocinas y Comedores.">
+<meta property="og:title" content="Planta de elaboración de viandas · maqueta 3D">
+<meta property="og:description" content="Lay-out, equipamiento y recorrido de producción en 3D. Luca Loffi · Equipamiento de Cocinas y Comedores.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='3' y='6' width='26' height='20' rx='2' fill='%23f7f8f9' stroke='%231d2730' stroke-width='2.5'/%3E%3Cpath d='M15 6v9M15 19v7M3 15h7M15 15h14' stroke='%231d2730' stroke-width='2'/%3E%3Cpath d='M6 22h6l4-4h8' fill='none' stroke='%23b5402a' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E">
+<style>:root{color-scheme:light}html,body{margin:0}body{font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Planta de viandas · maqueta 3D · Luca Loffi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Mesa de dibujo: lámina clara con tinta azul pizarra; el modelo ocupa toda la pantalla y el panel de lectura queda a la derecha. */
+:root {
+  --ground: #e9edf0;
+  --paper: #f7f8f9;
+  --ink: #1d2730;
+  --ink-2: #4b5864;
+  --line: #cfd6dc;
+  --accent: #b5402a;
+  --cold: #2f74c0;
+  --warm: #d8932b;
+  --hot: #c8382a;
+  --shadow: 0 1px 2px rgba(20, 30, 40, .08), 0 8px 24px rgba(20, 30, 40, .08);
+  --scene: #e4e9ed;
+  --f-ui: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-num: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --ground: #12171c; --paper: #1a2128; --ink: #e6ebef; --ink-2: #9fb0bd; --line: #2c3740; --accent: #e07a5f; --cold: #6aa8ec; --warm: #e8b04f; --hot: #ee6a57; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35); --scene: #161c22; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --ground: #12171c; --paper: #1a2128; --ink: #e6ebef; --ink-2: #9fb0bd; --line: #2c3740; --accent: #e07a5f; --cold: #6aa8ec; --warm: #e8b04f; --hot: #ee6a57; --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35); --scene: #161c22; color-scheme: dark; }
+html, body { height: 100%; }
+body { background: var(--ground); color: var(--ink); font-family: var(--f-ui); overflow: hidden; }
+.app { position: relative; height: 100%; display: grid; grid-template-columns: minmax(0, 1fr) 360px; }
+.stage { position: relative; min-width: 0; min-height: 0; }
+#gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; outline: none; }
+#labels { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 1; }
+.head { z-index: 3; position: absolute; top: max(14px, env(safe-area-inset-top, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); right: 16px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: flex-start; pointer-events: none; }
+.title { pointer-events: auto; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; box-shadow: var(--shadow); max-width: 460px; }
+.title h1 { margin: 0; font-size: 17px; font-weight: 700; text-wrap: balance; }
+.title p { margin: 3px 0 0; font-size: 12.5px; color: var(--ink-2); }
+.views { pointer-events: auto; display: flex; gap: 4px; background: color-mix(in srgb, var(--paper) 88%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--line); border-radius: 10px; padding: 4px; box-shadow: var(--shadow); }
+button { font: inherit; color: inherit; }
+.seg { border: 0; background: transparent; padding: 7px 11px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--ink-2); }
+.seg:hover { color: var(--ink); background: color-mix(in srgb, var(--ink) 6%, transparent); }
+.seg[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.hint { z-index: 2; position: absolute; left: max(16px, env(safe-area-inset-left, 0px)); bottom: max(14px, env(safe-area-inset-bottom, 0px)); font-size: 12px; color: var(--ink-2); background: color-mix(in srgb, var(--paper) 80%, transparent); padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); pointer-events: none; }
+.tip { position: absolute; z-index: 5; max-width: 300px; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); padding: 10px 12px; font-size: 12.5px; line-height: 1.4; pointer-events: none; }
+.tip b { font-size: 13.5px; }
+.tip .meta { color: var(--ink-2); font-family: var(--f-num); font-size: 11.5px; margin-top: 4px; }
+aside { background: var(--paper); border-left: 1px solid var(--line); overflow-y: auto; padding: 18px max(16px, env(safe-area-inset-right, 0px)) 24px 18px; display: flex; flex-direction: column; gap: 18px; }
+aside h2 { margin: 0 0 8px; font-size: 14px; font-weight: 700; }
+.card { border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; }
+.st-top { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.st-n { font-family: var(--f-num); font-size: 12px; color: var(--ink-2); }
+.st-name { font-size: 20px; font-weight: 700; margin: 0; text-wrap: balance; }
+.st-what { margin: 0; font-size: 13.5px; color: var(--ink-2); line-height: 1.45; }
+.temp { display: inline-flex; align-items: baseline; gap: 4px; font-family: var(--f-num); font-weight: 500; font-size: 22px; font-variant-numeric: tabular-nums; }
+.temp small { font-size: 12px; color: var(--ink-2); }
+.st-eq { font-size: 12.5px; color: var(--ink-2); }
+.st-eq span { display: inline-block; margin: 2px 4px 0 0; padding: 2px 7px; border: 1px solid var(--line); border-radius: 999px; color: var(--ink); }
+.thermo { height: 6px; border-radius: 999px; background: linear-gradient(90deg, var(--cold) 0%, var(--cold) 6%, var(--warm) 45%, var(--hot) 100%); position: relative; margin-top: 2px; }
+.thermo i { position: absolute; top: -4px; width: 3px; height: 14px; border-radius: 2px; background: var(--ink); transform: translateX(-50%); transition: left .4s ease; }
+.thermo-scale { display: flex; justify-content: space-between; font-family: var(--f-num); font-size: 10.5px; color: var(--ink-2); }
+.play { display: flex; gap: 6px; align-items: center; }
+.btn { border: 1px solid var(--line); background: var(--paper); border-radius: 8px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.btn:hover { border-color: var(--ink-2); }
+.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); min-width: 92px; }
+.speed { margin-left: auto; display: flex; gap: 2px; }
+.speed .seg { padding: 5px 8px; font-family: var(--f-num); font-size: 12px; }
+ol.stations { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
+ol.stations button { width: 100%; display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; text-align: left; border: 0; background: transparent; padding: 6px 8px; border-radius: 8px; cursor: pointer; font-size: 13px; }
+ol.stations button:hover { background: color-mix(in srgb, var(--ink) 5%, transparent); }
+ol.stations button[aria-current="step"] { background: color-mix(in srgb, var(--accent) 12%, transparent); }
+ol.stations .k { font-family: var(--f-num); font-size: 12px; color: var(--ink-2); }
+ol.stations .t { font-family: var(--f-num); font-size: 12px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.layers { display: grid; gap: 6px; }
+.layers label { display: flex; align-items: center; gap: 9px; font-size: 13px; cursor: pointer; }
+.layers input { accent-color: var(--ink); width: 16px; height: 16px; margin: 0; }
+.sw { width: 22px; height: 4px; border-radius: 2px; flex: none; }
+.range { display: grid; gap: 4px; font-size: 13px; }
+.range input { width: 100%; accent-color: var(--ink); }
+.range output { font-family: var(--f-num); font-size: 12px; color: var(--ink-2); }
+.foot { font-size: 11.5px; color: var(--ink-2); line-height: 1.5; margin-top: auto; }
+.zlabel { font: 600 12px/1.2 var(--f-ui); color: #1d2730; background: rgba(255,255,255,.86); border: 1px solid rgba(29,39,48,.25); border-radius: 999px; padding: 3px 8px 3px 4px; white-space: nowrap; display: flex; gap: 6px; align-items: center; }
+.zlabel b { display: inline-grid; place-items: center; width: 18px; height: 18px; border-radius: 50%; background: #1d2730; color: #fff; font-size: 11px; }
+.nlabel { font: 600 10.5px/1 var(--f-num); color: #1d2730; background: #fff; border: 1px solid #1d2730; border-radius: 50%; width: 19px; height: 19px; display: grid; place-items: center; }
+.err { position: absolute; inset: 0; display: grid; place-items: center; padding: 24px; text-align: center; color: var(--ink-2); }
+.toggle-panel { display: none; }
+.short { display: none; }
+@media (max-width: 820px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+  aside { border-left: 0; border-top: 1px solid var(--line); max-height: 46vh; padding: 14px max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); gap: 14px; }
+  aside.min { max-height: 172px; }
+  .toggle-panel { display: block; align-self: flex-start; }
+  .title { max-width: none; }
+  .title p { display: none; }
+  .title { padding: 8px 12px; }
+  .title h1 { font-size: 15px; }
+  .long { display: none; }
+  .short { display: inline; }
+  .head { gap: 6px; }
+  .zlabel { padding: 3px; }
+  .zlabel span { display: none; }
+  .hint { display: none; }
+  .st-name { font-size: 17px; }
+}
+@media (prefers-reduced-motion: reduce) { .thermo i { transition: none; } }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="stage">
+    <canvas id="gl" tabindex="0" aria-label="Maqueta 3D de la planta. Arrastrá para girar."></canvas>
+    <div id="labels"></div>
+    <div class="head">
+      <div class="title"><h1>Planta de elaboración de viandas</h1><p>Milanesa de pollo con puré o papas españolas · 250 viandas por día · local de 18 × 12 m</p></div>
+      <div class="views" role="group" aria-label="Vista">
+        <button class="seg" data-view="iso" aria-pressed="true"><span class="long">Isométrica</span><span class="short">Iso</span></button>
+        <button class="seg" data-view="top" aria-pressed="false">Planta</button>
+        <button class="seg" data-view="front" aria-pressed="false">Frente</button>
+        <button class="seg" data-view="follow" aria-pressed="false"><span class="long">Seguir la bandeja</span><span class="short">Seguir</span></button>
+      </div>
+    </div>
+    <div class="hint">Arrastrá para girar · rueda o pellizco para acercar · clic derecho o dos dedos para desplazar · tocá un equipo para ver qué es</div>
+    <div class="tip" id="tip" hidden></div>
+  </div>
+  <aside id="panel">
+    <button class="btn toggle-panel" id="togglePanel" aria-expanded="true">Ocultar panel</button>
+    <section>
+      <h2>Recorrido de la milanesa</h2>
+      <div class="card" aria-live="polite">
+        <div class="st-top"><span class="st-n" id="stN">Estación 1 de 10</span><span class="st-n" id="stZone">A · Recepción</span></div>
+        <p class="st-name" id="stName">Recepción</p>
+        <p class="st-what" id="stWhat"></p>
+        <div class="st-top"><span class="temp" id="stTemp">3<small>°C en el centro</small></span></div>
+        <div class="thermo" aria-hidden="true"><i id="thermoMark" style="left:5%"></i></div>
+        <div class="thermo-scale" aria-hidden="true"><span>0 °C</span><span>40 °C</span><span>80 °C</span></div>
+        <div class="st-eq" id="stEq"></div>
+        <div class="play">
+          <button class="btn" id="prev" aria-label="Estación anterior">←</button>
+          <button class="btn primary" id="playBtn">Reproducir</button>
+          <button class="btn" id="next" aria-label="Estación siguiente">→</button>
+          <div class="speed" role="group" aria-label="Velocidad">
+            <button class="seg" data-speed="1" aria-pressed="true">1×</button>
+            <button class="seg" data-speed="2" aria-pressed="false">2×</button>
+            <button class="seg" data-speed="4" aria-pressed="false">4×</button>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section>
+      <h2>Estaciones</h2>
+      <ol class="stations" id="stList"></ol>
+    </section>
+    <section>
+      <h2>Flujos sobre el piso</h2>
+      <div class="layers" id="flowToggles"></div>
+    </section>
+    <section>
+      <h2>Mostrar</h2>
+      <div class="layers">
+        <label><input type="checkbox" id="optZones" checked> Letras de zonas</label>
+        <label><input type="checkbox" id="optNums"> Números de equipos (como en las láminas)</label>
+        <label><input type="checkbox" id="optHood" checked> Campana (en altura, a 1,85 m)</label>
+      </div>
+      <div class="range" style="margin-top:12px">
+        <label for="wallH">Altura de muros para mirar adentro</label>
+        <input type="range" id="wallH" min="0.3" max="2.8" step="0.05" value="1.2">
+        <output id="wallHOut" for="wallH">1,20 m de 2,80 m</output>
+      </div>
+    </section>
+    <p class="foot">Mismas medidas que las láminas 1 a 5: zonas A a N, equipos numerados del 1 al 57 y flujos de marcha hacia adelante. Luca Loffi · Equipamiento de Cocinas y Comedores · noviembre de 2026.</p>
+  </aside>
+</div>
+<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js", "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }</script>
+<script type="module">
+import * as THREE from "three";
+import { OrbitControls } from "three/addons/controls/OrbitControls.js";
+import { CSS2DRenderer, CSS2DObject } from "three/addons/renderers/CSS2DRenderer.js";
+import { Line2 } from "three/addons/lines/Line2.js";
+import { LineMaterial } from "three/addons/lines/LineMaterial.js";
+import { LineGeometry } from "three/addons/lines/LineGeometry.js";
+
+const D = {"local":{"w":1800,"d":1200,"wallExt":20,"wallInt":10,"area":216,"alto":280},"zones":[{"key":"recep","n":"A","name":"Recepción y control","x":0,"y":900,"w":450,"d":300,"fill":"#f3e6cf","kind":"sucia"},{"key":"seco","n":"B","name":"Depósito seco","x":0,"y":550,"w":220,"d":350,"fill":"#f3e6cf","kind":"sucia"},{"key":"camMP","n":"C","name":"Cámara de MP (0–4 °C)","x":220,"y":550,"w":230,"d":350,"fill":"#d6e9f8","kind":"frio"},{"key":"veg","n":"D","name":"Preparación de vegetales y pan","x":0,"y":150,"w":450,"d":400,"fill":"#f8dcd6","kind":"cruda"},{"key":"resid","n":"E","name":"Residuos","x":0,"y":0,"w":450,"d":150,"fill":"#e3d5c6","kind":"residuos"},{"key":"aves","n":"F","name":"Preparación de aves y empanado","x":450,"y":450,"w":500,"d":450,"fill":"#f8dcd6","kind":"cruda"},{"key":"coccion","n":"G","name":"Cocción","x":450,"y":0,"w":950,"d":450,"fill":"#fbdcb8","kind":"caliente"},{"key":"lavado","n":"H","name":"Lavado de utensilios y limpieza","x":950,"y":450,"w":450,"d":450,"fill":"#e6dcf3","kind":"lavado"},{"key":"abat","n":"I","name":"Enfriamiento rápido","x":1400,"y":0,"w":400,"d":350,"fill":"#d9efd9","kind":"limpia"},{"key":"envas","n":"J","name":"Envasado (sala a ≤ 12 °C)","x":1400,"y":350,"w":400,"d":550,"fill":"#d9efd9","kind":"limpia"},{"key":"camPT","n":"K","name":"Cámara de producto terminado (1–4 °C)","x":1400,"y":900,"w":400,"d":300,"fill":"#d6e9f8","kind":"frio"},{"key":"exped","n":"L","name":"Expedición","x":1000,"y":900,"w":400,"d":300,"fill":"#d9efd9","kind":"limpia"},{"key":"vest","n":"M","name":"Vestuarios y sanitarios","x":650,"y":900,"w":350,"d":300,"fill":"#e9e9e9","kind":"personal"},{"key":"ofic","n":"N","name":"Oficina","x":450,"y":900,"w":200,"d":300,"fill":"#e9e9e9","kind":"personal"}],"walls":[{"x":-20,"y":-20,"w":320,"h":20,"kind":"ext"},{"x":420,"y":-20,"w":1400,"h":20,"kind":"ext"},{"x":-20,"y":0,"w":20,"h":1200,"kind":"ext"},{"x":-20,"y":1200,"w":130,"h":20,"kind":"ext"},{"x":300,"y":1200,"w":490,"h":20,"kind":"ext"},{"x":880,"y":1200,"w":220,"h":20,"kind":"ext"},{"x":1300,"y":1200,"w":520,"h":20,"kind":"ext"},{"x":1800,"y":0,"w":20,"h":1200,"kind":"ext"},{"x":0,"y":145,"w":120,"h":10,"kind":"int"},{"x":220,"y":145,"w":225,"h":10,"kind":"int"},{"x":0,"y":545,"w":60,"h":10,"kind":"int"},{"x":150,"y":545,"w":70,"h":10,"kind":"int"},{"x":220,"y":545,"w":230,"h":10,"kind":"panel"},{"x":215,"y":555,"w":10,"h":340,"kind":"panel"},{"x":0,"y":895,"w":60,"h":10,"kind":"int"},{"x":150,"y":895,"w":70,"h":10,"kind":"int"},{"x":220,"y":895,"w":80,"h":10,"kind":"panel"},{"x":400,"y":895,"w":50,"h":10,"kind":"panel"},{"x":445,"y":0,"w":10,"h":280,"kind":"int"},{"x":445,"y":380,"w":10,"h":80,"kind":"int"},{"x":445,"y":540,"w":10,"h":5,"kind":"int"},{"x":445,"y":555,"w":10,"h":125,"kind":"panel"},{"x":445,"y":780,"w":10,"h":115,"kind":"panel"},{"x":445,"y":905,"w":10,"h":135,"kind":"int"},{"x":445,"y":1120,"w":10,"h":80,"kind":"int"},{"x":455,"y":445,"w":365,"h":10,"kind":"int"},{"x":920,"y":445,"w":130,"h":10,"kind":"int"},{"x":1150,"y":445,"w":245,"h":10,"kind":"int"},{"x":450,"y":895,"w":390,"h":10,"kind":"int"},{"x":930,"y":895,"w":470,"h":10,"kind":"int"},{"x":645,"y":905,"w":10,"h":55,"kind":"int"},{"x":645,"y":1040,"w":10,"h":160,"kind":"int"},{"x":945,"y":455,"w":10,"h":105,"kind":"int"},{"x":945,"y":660,"w":10,"h":235,"kind":"int"},{"x":995,"y":905,"w":10,"h":295,"kind":"int"},{"x":1395,"y":0,"w":10,"h":120,"kind":"int"},{"x":1395,"y":260,"w":10,"h":635,"kind":"int"},{"x":1395,"y":905,"w":10,"h":105,"kind":"panel"},{"x":1395,"y":1110,"w":10,"h":90,"kind":"panel"},{"x":1405,"y":345,"w":95,"h":10,"kind":"int"},{"x":1620,"y":345,"w":180,"h":10,"kind":"int"},{"x":1400,"y":895,"w":220,"h":10,"kind":"panel"},{"x":1720,"y":895,"w":80,"h":10,"kind":"panel"},{"x":766,"y":1064,"w":8,"h":136,"kind":"int"},{"x":655,"y":1056,"w":9,"h":8,"kind":"int"},{"x":734,"y":1056,"w":36,"h":8,"kind":"int"}],"doors":[{"axis":"x","t":20,"leaves":[{"H":[300,0],"L":[300,120],"C":[420,0],"r":120,"arc":[[420,0],[419.42216720066364,11.762056839547272],[417.69423364838764,23.41083864193539],[414.83284028786505,34.83416127053548],[410.8655439013544,45.922011883810775],[405.83055172180264,56.567608419119715],[399.7763534763054,66.66842796235227],[392.7612544035284,76.12719409963746],[384.8528137423857,84.85281374238569],[376.12719409963745,92.76125440352843],[366.66842796235227,99.77635347630543],[356.5676084191197,105.83055172180259],[345.9220118838108,110.86554390135441],[334.8341612705355,114.83284028786507],[323.4108386419354,117.69423364838765],[311.7620568395473,119.42216720066362],[300,120]]}]},{"axis":"x","t":20,"leaves":[{"H":[110,1200],"L":[110,1105],"C":[205,1200],"r":95,"arc":[[205,1200],[204.5425490338587,1190.6883716686918],[203.1746016383069,1181.4664194084678],[200.90933189455984,1172.4229556608261],[197.76855558857224,1163.6450739253164],[193.7825201130937,1155.2173100015302],[188.9896131687418,1147.2208278631379],[183.43599306946,1139.7326380044537],[177.17514421272202,1132.824855787278],[170.2673619955463,1126.56400693054],[162.7791721368622,1121.0103868312583],[154.78268999846978,1116.2174798869062],[146.35492607468353,1112.2314444114277],[137.5770443391739,1109.09066810544],[128.5335805915322,1106.825398361693],[119.31162833130827,1105.4574509661413],[110,1105]]},{"H":[300,1200],"L":[300,1105],"C":[205,1200],"r":95,"arc":[[205,1200],[205.4574509661413,1190.6883716686918],[206.8253983616931,1181.4664194084678],[209.09066810544016,1172.4229556608261],[212.23144441142776,1163.6450739253164],[216.2174798869063,1155.2173100015302],[221.0103868312582,1147.2208278631379],[226.56400693054,1139.7326380044537],[232.82485578727798,1132.824855787278],[239.7326380044537,1126.56400693054],[247.2208278631378,1121.0103868312583],[255.21731000153022,1116.2174798869062],[263.64507392531647,1112.2314444114277],[272.42295566082606,1109.09066810544],[281.4664194084678,1106.825398361693],[290.68837166869173,1105.4574509661413],[300,1105]]}]},{"axis":"x","t":20,"leaves":[{"H":[880,1200],"L":[880,1110],"C":[790,1200],"r":90,"arc":[[790,1200],[790.4333745995023,1191.1784573703396],[791.7293247637092,1182.4418710185485],[793.8753697841012,1173.8743790470985],[796.8508420739842,1165.5584910871419],[800.627086208648,1157.5742936856602],[805.1677348927709,1149.9986790282358],[810.4290591973537,1142.9046044252718],[816.3603896932107,1136.3603896932107],[822.9046044252719,1130.4290591973536],[829.9986790282358,1125.167734892771],[837.5742936856602,1120.627086208648],[845.5584910871419,1116.8508420739843],[853.8743790470984,1113.8753697841012],[862.4418710185485,1111.7293247637092],[871.1784573703395,1110.4333745995023],[880,1110]]}]},{"axis":"x","t":20,"leaves":[{"H":[1100,1200],"L":[1100,1100],"C":[1200,1200],"r":100,"arc":[[1200,1200],[1199.5184726672196,1190.1982859670438],[1198.0785280403231,1180.4909677983871],[1195.6940335732208,1170.9715322745537],[1192.3879532511287,1161.731656763491],[1188.1921264348355,1152.8603263174002],[1183.1469612302544,1144.4429766980397],[1177.3010453362738,1136.5606715836354],[1170.7106781186549,1129.2893218813454],[1163.4393284163646,1122.6989546637262],[1155.5570233019603,1116.8530387697456],[1147.1396736825998,1111.8078735651645],[1138.268343236509,1107.6120467488713],[1129.0284677254463,1104.3059664267792],[1119.5090322016129,1101.9214719596769],[1109.8017140329562,1100.4815273327804],[1100,1100]]},{"H":[1300,1200],"L":[1300,1100],"C":[1200,1200],"r":100,"arc":[[1200,1200],[1200.4815273327804,1190.1982859670438],[1201.9214719596769,1180.4909677983871],[1204.3059664267792,1170.9715322745537],[1207.6120467488713,1161.731656763491],[1211.8078735651645,1152.8603263174002],[1216.8530387697456,1144.4429766980397],[1222.6989546637262,1136.5606715836354],[1229.2893218813451,1129.2893218813454],[1236.5606715836354,1122.6989546637262],[1244.4429766980397,1116.8530387697456],[1252.8603263174002,1111.8078735651645],[1261.731656763491,1107.6120467488713],[1270.9715322745537,1104.3059664267792],[1280.4909677983871,1101.9214719596769],[1290.1982859670438,1100.4815273327804],[1300,1100]]}]},{"axis":"x","t":10,"leaves":[{"H":[120,155],"L":[120,255],"C":[220,155],"r":100,"arc":[[220,155],[219.5184726672197,164.80171403295606],[218.07852804032305,174.50903220161283],[215.69403357322088,184.02846772544623],[212.3879532511287,193.26834323650897],[208.1921264348355,202.13967368259978],[203.14696123025453,210.55702330196021],[197.30104533627372,218.43932841636456],[190.71067811865476,225.71067811865476],[183.43932841636456,232.3010453362737],[175.55702330196021,238.14696123025453],[167.13967368259978,243.1921264348355],[158.268343236509,247.3879532511287],[149.02846772544623,250.6940335732209],[139.50903220161283,253.07852804032305],[129.80171403295608,254.51847266721967],[120,255]]}]},{"axis":"x","t":10,"leaves":[{"H":[60,555],"L":[60,645],"C":[150,555],"r":90,"arc":[[150,555],[149.56662540049774,563.8215426296605],[148.27067523629074,572.5581289814515],[146.12463021589878,581.1256209529016],[143.1491579260158,589.4415089128581],[139.37291379135195,597.4257063143398],[134.8322651072291,605.0013209717642],[129.57094080264633,612.0953955747281],[123.63961030678928,618.6396103067892],[117.09539557472809,624.5709408026463],[110.00132097176422,629.8322651072291],[102.4257063143398,634.372913791352],[94.44150891285808,638.1491579260158],[86.12562095290161,641.1246302158988],[77.55812898145155,643.2706752362908],[68.82154262966047,644.5666254004977],[60.00000000000001,645]]}]},{"axis":"x","t":10,"leaves":[{"H":[60,895],"L":[60,805],"C":[150,895],"r":90,"arc":[[150,895],[149.56662540049774,886.1784573703395],[148.27067523629074,877.4418710185485],[146.12463021589878,868.8743790470984],[143.1491579260158,860.5584910871419],[139.37291379135195,852.5742936856602],[134.8322651072291,844.9986790282358],[129.57094080264633,837.9046044252719],[123.63961030678928,831.3603896932108],[117.09539557472809,825.4290591973537],[110.00132097176422,820.1677348927709],[102.4257063143398,815.627086208648],[94.44150891285808,811.8508420739842],[86.12562095290161,808.8753697841012],[77.55812898145155,806.7293247637092],[68.82154262966047,805.4333745995023],[60.00000000000001,805]]}]},{"axis":"x","t":10,"leaves":[{"H":[300,905],"L":[300,1005],"C":[400,905],"r":100,"arc":[[400,905],[399.5184726672197,914.801714032956],[398.078528040323,924.5090322016129],[395.69403357322085,934.0284677254463],[392.3879532511287,943.2683432365089],[388.1921264348355,952.1396736825998],[383.14696123025453,960.5570233019603],[377.3010453362737,968.4393284163646],[370.71067811865476,975.7106781186548],[363.43932841636456,982.3010453362737],[355.5570233019602,988.1469612302545],[347.1396736825998,993.1921264348355],[338.268343236509,997.3879532511287],[329.02846772544626,1000.6940335732208],[319.50903220161285,1003.078528040323],[309.80171403295606,1004.5184726672197],[300,1005]]}]},{"axis":"y","t":10,"leaves":[{"H":[455,280],"L":[555,280],"C":[455,380],"r":100,"arc":[[455,380],[464.80171403295606,379.5184726672197],[474.50903220161285,378.078528040323],[484.02846772544626,375.69403357322085],[493.268343236509,372.3879532511287],[502.1396736825998,368.1921264348355],[510.5570233019602,363.14696123025453],[518.4393284163646,357.3010453362737],[525.7106781186548,350.71067811865476],[532.3010453362737,343.43932841636456],[538.1469612302545,335.5570233019602],[543.1921264348355,327.1396736825998],[547.3879532511287,318.268343236509],[550.6940335732208,309.02846772544626],[553.078528040323,299.50903220161285],[554.5184726672197,289.80171403295606],[555,280]]}]},{"axis":"y","t":10,"leaves":[{"H":[455,460],"L":[535,460],"C":[455,540],"r":80,"arc":[[455,540],[462.84137122636486,539.6147781337758],[470.60722576129024,538.4628224322585],[478.22277418035696,536.5552268585767],[485.6146745892072,533.910362600903],[492.71173894607983,530.5537011478684],[499.44561864156816,526.5175689842036],[505.75146273309167,521.840836269019],[511.5685424949238,516.5685424949238],[516.840836269019,510.75146273309167],[521.5175689842036,504.44561864156816],[525.5537011478684,497.71173894607983],[528.910362600903,490.6146745892072],[531.5552268585767,483.22277418035696],[533.4628224322585,475.60722576129024],[534.6147781337758,467.84137122636486],[535,460]]}]},{"axis":"y","t":10,"leaves":[{"H":[455,680],"L":[555,680],"C":[455,780],"r":100,"arc":[[455,780],[464.80171403295606,779.5184726672197],[474.50903220161285,778.078528040323],[484.02846772544626,775.6940335732208],[493.268343236509,772.3879532511287],[502.1396736825998,768.1921264348355],[510.5570233019602,763.1469612302545],[518.4393284163646,757.3010453362737],[525.7106781186548,750.7106781186548],[532.3010453362737,743.4393284163646],[538.1469612302545,735.5570233019603],[543.1921264348355,727.1396736825998],[547.3879532511287,718.2683432365089],[550.6940335732208,709.0284677254463],[553.078528040323,699.5090322016129],[554.5184726672197,689.801714032956],[555,680]]}]},{"axis":"y","t":10,"leaves":[{"H":[455,1040],"L":[535,1040],"C":[455,1120],"r":80,"arc":[[455,1120],[462.84137122636486,1119.6147781337759],[470.60722576129024,1118.4628224322585],[478.22277418035696,1116.5552268585766],[485.6146745892072,1113.910362600903],[492.71173894607983,1110.5537011478684],[499.44561864156816,1106.5175689842035],[505.75146273309167,1101.840836269019],[511.5685424949238,1096.5685424949238],[516.840836269019,1090.7514627330916],[521.5175689842036,1084.4456186415682],[525.5537011478684,1077.7117389460798],[528.910362600903,1070.6146745892072],[531.5552268585767,1063.222774180357],[533.4628224322585,1055.6072257612902],[534.6147781337758,1047.8413712263648],[535,1040]]}]},{"axis":"x","t":10,"leaves":[{"H":[820,455],"L":[820,555],"C":[920,455],"r":100,"arc":[[920,455],[919.5184726672197,464.80171403295606],[918.078528040323,474.50903220161285],[915.6940335732208,484.02846772544626],[912.3879532511287,493.268343236509],[908.1921264348355,502.1396736825998],[903.1469612302545,510.5570233019602],[897.3010453362737,518.4393284163646],[890.7106781186548,525.7106781186548],[883.4393284163646,532.3010453362737],[875.5570233019603,538.1469612302545],[867.1396736825998,543.1921264348355],[858.2683432365089,547.3879532511287],[849.0284677254463,550.6940335732208],[839.5090322016129,553.078528040323],[829.801714032956,554.5184726672197],[820,555]]}]},{"axis":"x","t":10,"leaves":[{"H":[1150,455],"L":[1150,555],"C":[1050,455],"r":100,"arc":[[1050,455],[1050.4815273327804,464.80171403295606],[1051.9214719596769,474.50903220161285],[1054.3059664267792,484.02846772544626],[1057.6120467488713,493.268343236509],[1061.8078735651645,502.1396736825998],[1066.8530387697456,510.5570233019602],[1072.6989546637262,518.4393284163646],[1079.2893218813451,525.7106781186548],[1086.5606715836354,532.3010453362737],[1094.4429766980397,538.1469612302545],[1102.8603263174002,543.1921264348355],[1111.731656763491,547.3879532511287],[1120.9715322745537,550.6940335732208],[1130.4909677983871,553.078528040323],[1140.1982859670438,554.5184726672197],[1150,555]]}]},{"axis":"x","t":10,"leaves":[{"H":[840,905],"L":[840,995],"C":[930,905],"r":90,"arc":[[930,905],[929.5666254004977,913.8215426296605],[928.2706752362908,922.5581289814515],[926.1246302158988,931.1256209529016],[923.1491579260158,939.4415089128581],[919.372913791352,947.4257063143398],[914.8322651072291,955.0013209717642],[909.5709408026463,962.0953955747281],[903.6396103067893,968.6396103067892],[897.0953955747281,974.5709408026463],[890.0013209717642,979.8322651072291],[882.4257063143398,984.372913791352],[874.4415089128581,988.1491579260158],[866.1256209529016,991.1246302158988],[857.5581289814515,993.2706752362908],[848.8215426296605,994.5666254004977],[840,995]]}]},{"axis":"y","t":10,"leaves":[{"H":[655,960],"L":[735,960],"C":[655,1040],"r":80,"arc":[[655,1040],[662.8413712263648,1039.6147781337759],[670.6072257612902,1038.4628224322585],[678.222774180357,1036.5552268585766],[685.6146745892072,1033.910362600903],[692.7117389460798,1030.5537011478684],[699.4456186415682,1026.5175689842035],[705.7514627330917,1021.840836269019],[711.5685424949238,1016.5685424949238],[716.840836269019,1010.7514627330917],[721.5175689842036,1004.4456186415682],[725.5537011478684,997.7117389460798],[728.910362600903,990.6146745892072],[731.5552268585767,983.222774180357],[733.4628224322585,975.6072257612902],[734.6147781337758,967.8413712263649],[735,960]]}]},{"axis":"y","t":10,"leaves":[{"H":[955,560],"L":[1055,560],"C":[955,660],"r":100,"arc":[[955,660],[964.801714032956,659.5184726672197],[974.5090322016129,658.078528040323],[984.0284677254463,655.6940335732208],[993.2683432365089,652.3879532511287],[1002.1396736825998,648.1921264348355],[1010.5570233019603,643.1469612302545],[1018.4393284163646,637.3010453362737],[1025.7106781186546,630.7106781186548],[1032.3010453362738,623.4393284163646],[1038.1469612302544,615.5570233019603],[1043.1921264348355,607.1396736825998],[1047.3879532511287,598.2683432365089],[1050.6940335732208,589.0284677254463],[1053.0785280403231,579.5090322016129],[1054.5184726672196,569.801714032956],[1055,560]]}]},{"axis":"y","t":10,"leaves":[{"H":[1405,120],"L":[1475,120],"C":[1405,190],"r":70,"arc":[[1405,190],[1411.8611998230692,189.66293086705377],[1418.656322541129,188.65496962822613],[1425.3199274078124,186.98582350125463],[1431.7878402655563,184.67156727579007],[1437.9977715778198,181.73448850438484],[1443.8899163113722,178.20287286117815],[1449.4075298914552,174.1107317353916],[1454.4974746830583,169.49747468305833],[1459.1107317353915,164.40752989145517],[1463.202872861178,158.88991631137216],[1466.734488504385,152.99777157781983],[1469.67156727579,146.7878402655563],[1471.9858235012546,140.31992740781237],[1473.6549696282261,133.656322541129],[1474.6629308670538,126.86119982306926],[1475,120]]},{"H":[1405,260],"L":[1475,260],"C":[1405,190],"r":70,"arc":[[1405,190],[1411.8611998230692,190.33706913294623],[1418.656322541129,191.34503037177387],[1425.3199274078124,193.01417649874537],[1431.7878402655563,195.32843272420993],[1437.9977715778198,198.26551149561516],[1443.8899163113722,201.79712713882185],[1449.4075298914552,205.8892682646084],[1454.4974746830583,210.50252531694167],[1459.1107317353915,215.59247010854483],[1463.202872861178,221.11008368862784],[1466.734488504385,227.00222842218017],[1469.67156727579,233.2121597344437],[1471.9858235012546,239.68007259218763],[1473.6549696282261,246.343677458871],[1474.6629308670538,253.13880017693074],[1475,260]]}]},{"axis":"y","t":10,"leaves":[{"H":[1395,1010],"L":[1295,1010],"C":[1395,1110],"r":100,"arc":[[1395,1110],[1385.1982859670438,1109.5184726672196],[1375.4909677983871,1108.0785280403231],[1365.9715322745537,1105.6940335732208],[1356.731656763491,1102.3879532511287],[1347.8603263174002,1098.1921264348355],[1339.4429766980397,1093.1469612302544],[1331.5606715836354,1087.3010453362738],[1324.2893218813454,1080.7106781186549],[1317.6989546637262,1073.4393284163646],[1311.8530387697456,1065.5570233019603],[1306.8078735651645,1057.1396736825998],[1302.6120467488713,1048.268343236509],[1299.3059664267792,1039.0284677254463],[1296.9214719596769,1029.5090322016129],[1295.4815273327804,1019.801714032956],[1295,1010]]}]},{"axis":"x","t":10,"leaves":[{"H":[1500,355],"L":[1500,475],"C":[1620,355],"r":120,"arc":[[1620,355],[1619.4221672006636,366.76205683954726],[1617.6942336483876,378.4108386419354],[1614.832840287865,389.8341612705355],[1610.8655439013544,400.9220118838108],[1605.8305517218025,411.5676084191197],[1599.7763534763055,421.66842796235227],[1592.7612544035285,431.12719409963745],[1584.8528137423857,439.8528137423857],[1576.1271940996376,447.7612544035284],[1566.6684279623523,454.7763534763054],[1556.5676084191198,460.8305517218026],[1545.9220118838107,465.8655439013544],[1534.8341612705356,469.83284028786505],[1523.4108386419355,472.69423364838764],[1511.7620568395473,474.42216720066364],[1500,475]]}]},{"axis":"x","t":10,"leaves":[{"H":[1620,895],"L":[1620,795],"C":[1720,895],"r":100,"arc":[[1720,895],[1719.5184726672196,885.198285967044],[1718.0785280403231,875.4909677983871],[1715.6940335732208,865.9715322745537],[1712.3879532511287,856.7316567634911],[1708.1921264348355,847.8603263174002],[1703.1469612302544,839.4429766980397],[1697.3010453362738,831.5606715836354],[1690.7106781186549,824.2893218813452],[1683.4393284163646,817.6989546637263],[1675.5570233019603,811.8530387697455],[1667.1396736825998,806.8078735651645],[1658.268343236509,802.6120467488713],[1649.0284677254463,799.3059664267792],[1639.5090322016129,796.921471959677],[1629.8017140329562,795.4815273327803],[1620,795]]}]},{"axis":"x","t":8,"leaves":[{"H":[664,1064],"L":[664,1134],"C":[734,1064],"r":70,"arc":[[734,1064],[733.6629308670538,1070.8611998230692],[732.6549696282261,1077.656322541129],[730.9858235012546,1084.3199274078124],[728.67156727579,1090.7878402655563],[725.7344885043849,1096.9977715778198],[722.2028728611782,1102.8899163113722],[718.1107317353916,1108.4075298914552],[713.4974746830583,1113.4974746830583],[708.4075298914552,1118.1107317353915],[702.8899163113722,1122.202872861178],[696.9977715778199,1125.734488504385],[690.7878402655563,1128.67156727579],[684.3199274078123,1130.9858235012546],[677.6563225411289,1132.6549696282261],[670.8611998230692,1133.6629308670538],[664,1134]]}]}],"equip":[{"id":1,"zone":"recep","name":"Balanza de plataforma 0–150 kg (con indicador)","use":"Pesar cada entrega (cajones de pechuga, bolsas de papa de 25 kg, pan) contra el remito; los bultos de 20–50 kg quedan en la zona media del rango, donde la balanza mide mejor.","u":"U04","kind":"balanzaPiso","x":18,"y":960,"w":90,"d":90,"h":8,"p":1,"st":1,"short":"Balanza de plataforma 0–150 kg","cat":"almacen","color":"#8b5a2b","catName":"Almacenamiento","zoneN":"A","zoneName":"Recepción y control"},{"id":2,"zone":"recep","name":"Mesa de recepción inox con estante y termómetro de pinche","use":"Control de temperatura (pollo y lácteos ≤ 4 °C), rotulado de ingreso y registro de lote y vencimiento.","u":"U04","kind":"mesa","x":15,"y":1065,"w":70,"d":120,"h":90,"wall":"left","p":1,"st":1,"short":"Mesa de recepción inox con estante y termómetro de pinche","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"A","zoneName":"Recepción y control"},{"id":3,"zone":"recep","name":"Lavamanos de accionamiento a pedal","use":"Higiene de manos del personal de recepción.","u":"BPM","kind":"lavamanos","x":320,"y":1152,"w":50,"d":40,"h":85,"wall":"front","p":1,"short":"Lavamanos de accionamiento a pedal","cat":"higiene","color":"#7d3c98","catName":"Higiene y lavado","zoneN":"A","zoneName":"Recepción y control"},{"id":4,"zone":"recep","name":"Zorra / carro de transporte de acero inoxidable","use":"Mover cajones y bolsas sin cargar peso a mano.","u":"U04","kind":"zorra","x":370,"y":1000,"w":60,"d":90,"h":95,"p":1,"short":"Zorra / carro de transporte de acero inoxidable","cat":"transporte","color":"#6c7a89","catName":"Carros y transporte","zoneN":"A","zoneName":"Recepción y control"},{"id":5,"zone":"seco","name":"Estanterías reticuladas (zinc o epoxi), 4 estantes","use":"Pan del día anterior, aceite, sal y especias, ordenados, a la vista y separados del piso.","u":"U04","kind":"estanteria","x":8,"y":580,"w":45,"d":300,"h":180,"levels":4,"p":1,"short":"Estanterías reticuladas","cat":"almacen","color":"#8b5a2b","catName":"Almacenamiento","zoneN":"B","zoneName":"Depósito seco"},{"id":6,"zone":"seco","name":"Bases de estiba reforzadas (dunnage racks)","use":"Bolsas de papa fuera del piso: sin humedad ni plagas, con ventilación.","u":"U04","kind":"dunnage","x":158,"y":600,"w":55,"d":260,"h":30,"p":1,"short":"Bases de estiba reforzadas","cat":"almacen","color":"#8b5a2b","catName":"Almacenamiento","zoneN":"B","zoneName":"Depósito seco"},{"id":7,"zone":"camMP","name":"Cámara modular de MP 0–4 °C con estanterías cromadas","use":"Pechugas en cajones, huevos, leche, manteca y perejil en estantes separados; evaporador con forzador y unidad condensadora exterior.","u":"U04, U10","kind":"estanteria","x":230,"y":565,"w":45,"d":320,"h":180,"levels":4,"p":1,"st":2,"cold":true,"short":"Cámara modular de MP 0–4 °C con estanterías cromadas","cat":"frio","color":"#1f5fa8","catName":"Refrigeración","zoneN":"C","zoneName":"Cámara de MP (0–4 °C)"},{"id":8,"zone":"camMP","name":"Estantería reticulada cromada (fondo de cámara)","use":"Lácteos, huevos y perejil arriba; aves en el estante bajo para que no goteen sobre otros alimentos.","u":"U04","kind":"estanteria","x":285,"y":560,"w":155,"d":45,"h":180,"levels":4,"p":1,"st":2,"cold":true,"short":"Estantería reticulada cromada","cat":"frio","color":"#1f5fa8","catName":"Refrigeración","zoneN":"C","zoneName":"Cámara de MP (0–4 °C)"},{"id":9,"zone":"veg","name":"Mesada inox con bacha doble y zócalo","use":"Lavado de papas antes y después del pelado, enjuague de las rodajas y lavado del perejil.","u":"U05","kind":"mesa","x":8,"y":200,"w":70,"d":220,"h":90,"wall":"left","bachas":2,"p":1,"short":"Mesada inox con bacha doble y zócalo","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"D","zoneName":"Preparación de vegetales y pan"},{"id":10,"zone":"veg","name":"Peladora de papas abrasiva (de pie)","use":"Pela los 67 kg diarios de papa con poca merma; el agua con cáscaras decanta antes del desagüe.","u":"U05","kind":"peladora","x":95,"y":275,"w":64,"d":64,"h":95,"p":1,"short":"Peladora de papas abrasiva","cat":"prep","color":"#1e8449","catName":"Máquinas de preparación","zoneN":"D","zoneName":"Preparación de vegetales y pan"},{"id":11,"zone":"veg","name":"Mesa de trabajo inox con zócalo","use":"Puesto de corte de papas y de rallado del pan (en distinto horario).","u":"U05","kind":"mesa","x":245,"y":160,"w":195,"d":70,"h":90,"wall":"back","p":1,"short":"Mesa de trabajo inox con zócalo","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"D","zoneName":"Preparación de vegetales y pan"},{"id":12,"zone":"veg","name":"Procesador combinado de vegetales + cutter","use":"Disco rebanador de 2,5 mm para papas españolas, cubeteador para el puré, cutter para rallar pan y picar ajo y perejil.","u":"U05","kind":"procesador","x":300,"y":172,"w":40,"d":40,"h":50,"on":11,"p":1,"short":"Procesador combinado de vegetales + cutter","cat":"prep","color":"#1e8449","catName":"Máquinas de preparación","zoneN":"D","zoneName":"Preparación de vegetales y pan"},{"id":13,"zone":"veg","name":"Secador centrífugo de verduras","use":"Seca las rodajas de papa antes de freír: menos salpicaduras y fritura más pareja.","u":"U05","kind":"secador","x":205,"y":300,"w":52,"d":52,"h":80,"p":1,"short":"Secador centrífugo de verduras","cat":"prep","color":"#1e8449","catName":"Máquinas de preparación","zoneN":"D","zoneName":"Preparación de vegetales y pan"},{"id":14,"zone":"veg","name":"Lavamanos de accionamiento a pedal","use":"Higiene de manos en el sector.","u":"BPM","kind":"lavamanos","x":380,"y":504,"w":50,"d":40,"h":85,"wall":"front","p":1,"short":"Lavamanos de accionamiento a pedal","cat":"higiene","color":"#7d3c98","catName":"Higiene y lavado","zoneN":"D","zoneName":"Preparación de vegetales y pan"},{"id":15,"zone":"resid","name":"Contenedores con tapa y ruedas (orgánicos, reciclables)","use":"Huesos y piel, cáscaras, cartón y film separados; salida propia al patio.","u":"U01, U15","kind":"contenedores","x":15,"y":15,"w":185,"d":60,"h":100,"p":1,"short":"Contenedores con tapa y ruedas","cat":"residuos","color":"#5d4037","catName":"Residuos","zoneN":"E","zoneName":"Residuos"},{"id":16,"zone":"resid","name":"Bidón para aceite usado","use":"Aceite de fritura descartado, retirado por un recolector habilitado.","u":"U08","kind":"bidon","x":215,"y":20,"w":50,"d":50,"h":80,"p":1,"short":"Bidón para aceite usado","cat":"residuos","color":"#5d4037","catName":"Residuos","zoneN":"E","zoneName":"Residuos"},{"id":17,"zone":"aves","name":"Mesa de desposte con bacha, zócalo y tabla de corte","use":"Deshuesado y despielado de pechugas sobre tabla de polietileno; bacha para utensilios del sector.","u":"U05","kind":"mesa","x":535,"y":456,"w":160,"d":70,"h":90,"wall":"back","bachas":1,"p":1,"st":3,"short":"Mesa de desposte con bacha","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"F","zoneName":"Preparación de aves y empanado"},{"id":18,"zone":"aves","name":"Tiernizador de carnes (de mesa)","use":"Empareja espesor y terneza de los filetes sin golpearlos.","u":"U05","kind":"tiernizador","x":640,"y":466,"w":40,"d":40,"h":34,"on":17,"p":2,"st":3,"short":"Tiernizador de carnes","cat":"prep","color":"#1e8449","catName":"Máquinas de preparación","zoneN":"F","zoneName":"Preparación de aves y empanado"},{"id":19,"zone":"aves","name":"Mesa de trabajo inox","use":"Soporte de la cortadora para filetear.","u":"U05","kind":"mesa","x":705,"y":456,"w":105,"d":70,"h":90,"wall":"back","p":1,"st":3,"short":"Mesa de trabajo inox","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"F","zoneName":"Preparación de aves y empanado"},{"id":20,"zone":"aves","name":"Cortadora de disco oblicuo","use":"Filetea las supremas en láminas parejas de 1 cm para milanesa.","u":"U05","kind":"cortadora","x":722,"y":466,"w":70,"d":48,"h":36,"on":19,"p":1,"st":3,"short":"Cortadora de disco oblicuo","cat":"prep","color":"#1e8449","catName":"Máquinas de preparación","zoneN":"F","zoneName":"Preparación de aves y empanado"},{"id":21,"zone":"aves","name":"Refrigerador bajo mesada, 2 puertas","use":"Filetes, batido y milanesas empanadas en espera a ≤ 4 °C dentro del sector.","u":"U05","kind":"bajoMesada","x":458,"y":540,"w":70,"d":130,"h":88,"wall":"left","p":1,"st":3,"short":"Refrigerador bajo mesada","cat":"frio","color":"#1f5fa8","catName":"Refrigeración","zoneN":"F","zoneName":"Preparación de aves y empanado"},{"id":22,"zone":"aves","name":"Puesto de empanado manual con tamiz vibratorio","use":"Batido, pan rallado y bandeja de salida en línea; el tamiz separa los grumos que queman el aceite.","u":"U05","kind":"empanador","x":565,"y":640,"w":240,"d":75,"h":90,"p":1,"st":4,"short":"Puesto de empanado manual con tamiz vibratorio","cat":"prep","color":"#1e8449","catName":"Máquinas de preparación","zoneN":"F","zoneName":"Preparación de aves y empanado"},{"id":23,"zone":"aves","name":"Lavamanos de accionamiento a pedal (ingreso de personal)","use":"Lavado de manos obligatorio al entrar a producción desde vestuarios.","u":"BPM","kind":"lavamanos","x":770,"y":854,"w":50,"d":40,"h":85,"wall":"front","p":1,"short":"Lavamanos de accionamiento a pedal","cat":"higiene","color":"#7d3c98","catName":"Higiene y lavado","zoneN":"F","zoneName":"Preparación de aves y empanado"},{"id":24,"zone":"aves","name":"Carro portabandejas GN 1/1","use":"Lleva las milanesas empanadas a la freidora sin manipularlas.","u":"U05","kind":"carroGN","x":862,"y":700,"w":60,"d":70,"h":160,"p":1,"short":"Carro portabandejas GN 1/1","cat":"transporte","color":"#6c7a89","catName":"Carros y transporte","zoneN":"F","zoneName":"Preparación de aves y empanado"},{"id":25,"zone":"coccion","name":"Horno combinado eléctrico 10 GN 1/1 con soporte","use":"Terminar las milanesas en aire seco hasta 74 °C en el centro (sensor de aguja) y secar el pan para rallar.","u":"U07","kind":"combi","x":470,"y":12,"w":95,"d":88,"h":170,"wall":"back","p":1,"st":6,"short":"Horno combinado eléctrico 10 GN 1/1 con soporte","cat":"coccion","color":"#c0392b","catName":"Cocción y extracción","zoneN":"G","zoneName":"Cocción"},{"id":26,"zone":"coccion","name":"Mesa de apoyo inox","use":"Bandejas GN entre freidora y horno.","u":"U05","kind":"mesa","x":575,"y":12,"w":80,"d":85,"h":90,"wall":"back","p":1,"short":"Mesa de apoyo inox","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"G","zoneName":"Cocción"},{"id":27,"zone":"coccion","name":"Freidora eléctrica de 2 cubas en V (2 × 20 L) – milanesas","use":"Prefritura de 2 minutos a 175 °C que dora y fija el empanado.","u":"U08","kind":"freidora","x":662,"y":12,"w":82,"d":88,"h":90,"cubas":2,"wall":"back","p":1,"st":5,"short":"Freidora eléctrica de 2 cubas en V","cat":"coccion","color":"#c0392b","catName":"Cocción y extracción","zoneN":"G","zoneName":"Cocción"},{"id":28,"zone":"coccion","name":"Freidora eléctrica en V (20 L) – papas españolas","use":"Fritura de las rodajas a 170–175 °C, con aceite separado del de las milanesas.","u":"U08","kind":"freidora","x":750,"y":12,"w":55,"d":88,"h":90,"cubas":1,"wall":"back","p":1,"short":"Freidora eléctrica en V","cat":"coccion","color":"#c0392b","catName":"Cocción y extracción","zoneN":"G","zoneName":"Cocción"},{"id":29,"zone":"coccion","name":"Escurridor neutro","use":"Escurrir y salar las papas recién fritas.","u":"U06","kind":"mesa","x":812,"y":12,"w":70,"d":85,"h":90,"wall":"back","p":1,"short":"Escurridor neutro","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"G","zoneName":"Cocción"},{"id":30,"zone":"coccion","name":"Marmita volcable indirecta eléctrica 100 L con mezclador","use":"Hervir los cubos de papa, escurrir por volcado y hacer el puré con la paleta y la leche caliente.","u":"U08","kind":"marmita","x":895,"y":10,"w":150,"d":95,"h":100,"p":1,"short":"Marmita volcable indirecta eléctrica 100 L con mezclador","cat":"coccion","color":"#c0392b","catName":"Cocción y extracción","zoneN":"G","zoneName":"Cocción"},{"id":31,"zone":"coccion","name":"Mesa de apoyo inox","use":"Bandejas GN de puré antes del abatidor.","u":"U05","kind":"mesa","x":1060,"y":12,"w":120,"d":85,"h":90,"wall":"back","p":1,"short":"Mesa de apoyo inox","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"G","zoneName":"Cocción"},{"id":32,"zone":"coccion","name":"Campana mural con filtros laberínticos, desgrasador y extinción automática","use":"Capta humos y grasa de horno, freidoras y marmita; inyección de aire del 70 %, dumper antiincendio y difusores de acetato de potasio.","u":"U16","kind":"campana","x":460,"y":0,"w":735,"d":122,"h":60,"z":185,"p":1,"short":"Campana mural con filtros laberínticos","cat":"coccion","color":"#c0392b","catName":"Cocción y extracción","zoneN":"G","zoneName":"Cocción"},{"id":33,"zone":"coccion","name":"Mesa central de trabajo (isla)","use":"Armado de bandejas, control de temperatura y escurrido.","u":"U05","kind":"mesa","x":650,"y":230,"w":300,"d":80,"h":90,"p":1,"short":"Mesa central de trabajo","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"G","zoneName":"Cocción"},{"id":34,"zone":"coccion","name":"Filtro de aceite portátil con bomba","use":"Filtrado diario de 5 minutos: el aceite pasa de 5 a 8 días de vida útil.","u":"U08","kind":"filtro","x":1200,"y":20,"w":70,"d":60,"h":45,"p":1,"short":"Filtro de aceite portátil con bomba","cat":"coccion","color":"#c0392b","catName":"Cocción y extracción","zoneN":"G","zoneName":"Cocción"},{"id":35,"zone":"coccion","name":"Carro portabandejas GN 1/1","use":"Del horno al abatidor sin cambiar de bandeja.","u":"U05, U12","kind":"carroGN","x":1290,"y":300,"w":60,"d":70,"h":160,"p":1,"short":"Carro portabandejas GN 1/1","cat":"transporte","color":"#6c7a89","catName":"Carros y transporte","zoneN":"G","zoneName":"Cocción"},{"id":36,"zone":"coccion","name":"Lavamanos de accionamiento a pedal","use":"Higiene de manos en el sector caliente.","u":"BPM","kind":"lavamanos","x":1340,"y":402,"w":50,"d":40,"h":85,"wall":"front","p":1,"short":"Lavamanos de accionamiento a pedal","cat":"higiene","color":"#7d3c98","catName":"Higiene y lavado","zoneN":"G","zoneName":"Cocción"},{"id":37,"zone":"lavado","name":"Mesada con bacha triple y manguera de prelavado","use":"Lavar, enjuagar y desinfectar bandejas, ollas y utensilios (una bacha para cada paso); separador de grasa en el desagüe.","u":"U15","kind":"mesa","x":1322,"y":520,"w":70,"d":290,"h":90,"wall":"right","bachas":3,"p":1,"short":"Mesada con bacha triple y manguera de prelavado","cat":"higiene","color":"#7d3c98","catName":"Higiene y lavado","zoneN":"H","zoneName":"Lavado de utensilios y limpieza"},{"id":38,"zone":"lavado","name":"Estantería reticulada de secado","use":"Utensilios y bandejas limpias escurriendo al aire.","u":"U04, U15","kind":"estanteria","x":1010,"y":848,"w":230,"d":45,"h":180,"levels":4,"p":1,"short":"Estantería reticulada de secado","cat":"almacen","color":"#8b5a2b","catName":"Almacenamiento","zoneN":"H","zoneName":"Lavado de utensilios y limpieza"},{"id":39,"zone":"lavado","name":"Lavadora portátil a vapor","use":"Limpieza profunda de horno, freidoras, marmita y cortadora.","u":"U15","kind":"vapor","x":975,"y":470,"w":55,"d":55,"h":70,"p":2,"short":"Lavadora portátil a vapor","cat":"higiene","color":"#7d3c98","catName":"Higiene y lavado","zoneN":"H","zoneName":"Lavado de utensilios y limpieza"},{"id":40,"zone":"lavado","name":"Armario cerrado de productos de limpieza","use":"Detergentes y sanitizantes lejos de los alimentos.","u":"U01","kind":"armario","x":1180,"y":458,"w":110,"d":50,"h":180,"wall":"back","p":1,"short":"Armario cerrado de productos de limpieza","cat":"higiene","color":"#7d3c98","catName":"Higiene y lavado","zoneN":"H","zoneName":"Lavado de utensilios y limpieza"},{"id":41,"zone":"abat","name":"Abatidor de temperatura 15 GN 1/1 con sensor de aguja","use":"Lleva todo de 75 °C a 3 °C en el centro en ≤ 90 min: 4 ciclos por día.","u":"U12","kind":"abatidor","x":1440,"y":12,"w":90,"d":90,"h":195,"wall":"back","p":1,"st":7,"short":"Abatidor de temperatura 15 GN 1/1 con sensor de aguja","cat":"frio","color":"#1f5fa8","catName":"Refrigeración","zoneN":"I","zoneName":"Enfriamiento rápido"},{"id":42,"zone":"abat","name":"Mesa de apoyo inox","use":"Recibir bandejas frías antes del envasado.","u":"U05","kind":"mesa","x":1645,"y":12,"w":145,"d":70,"h":90,"wall":"back","p":1,"short":"Mesa de apoyo inox","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"I","zoneName":"Enfriamiento rápido"},{"id":43,"zone":"envas","name":"Mesa de porcionado inox con balanza de precisión","use":"Porcionar 165 g de milanesa y 220 g de puré o 130 g de papas por bandeja.","u":"U05","kind":"mesa","x":1480,"y":490,"w":230,"d":80,"h":90,"scale":true,"p":1,"st":8,"short":"Mesa de porcionado inox con balanza de precisión","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"J","zoneName":"Envasado (sala a ≤ 12 °C)"},{"id":44,"zone":"envas","name":"Termoselladora de bandejas (opción atmósfera modificada)","use":"Cierra cada vianda con film; con mezcla de nitrógeno y CO₂ extiende la vida útil.","u":"U12","kind":"termoselladora","x":1690,"y":610,"w":95,"d":75,"h":140,"p":1,"st":8,"short":"Termoselladora de bandejas","cat":"envasado","color":"#0e7c86","catName":"Envasado","zoneN":"J","zoneName":"Envasado (sala a ≤ 12 °C)"},{"id":45,"zone":"envas","name":"Mesa de rotulado con impresora de etiquetas","use":"Etiqueta con lote, elaboración, vencimiento, alérgenos y regeneración.","u":"U05","kind":"mesa","x":1450,"y":800,"w":150,"d":70,"h":90,"wall":"front","label":true,"p":1,"short":"Mesa de rotulado con impresora de etiquetas","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"J","zoneName":"Envasado (sala a ≤ 12 °C)"},{"id":46,"zone":"envas","name":"Estantería de material de empaque","use":"Bandejas de 2 compartimentos y bobinas de film, separadas de los alimentos.","u":"U04","kind":"estanteria","x":1408,"y":590,"w":45,"d":170,"h":180,"levels":4,"p":1,"short":"Estantería de material de empaque","cat":"almacen","color":"#8b5a2b","catName":"Almacenamiento","zoneN":"J","zoneName":"Envasado (sala a ≤ 12 °C)"},{"id":47,"zone":"envas","name":"Lavamanos de accionamiento a pedal","use":"Higiene de manos en la zona limpia.","u":"BPM","kind":"lavamanos","x":1410,"y":362,"w":50,"d":40,"h":85,"wall":"back","p":1,"short":"Lavamanos de accionamiento a pedal","cat":"higiene","color":"#7d3c98","catName":"Higiene y lavado","zoneN":"J","zoneName":"Envasado (sala a ≤ 12 °C)"},{"id":48,"zone":"camPT","name":"Cámara modular de PT 1–4 °C con estanterías cromadas","use":"250 viandas del día y las de reserva, por lote, hasta 5 días.","u":"U04, U12","kind":"estanteria","x":1745,"y":918,"w":45,"d":272,"h":180,"levels":5,"p":1,"st":9,"cold":true,"short":"Cámara modular de PT 1–4 °C con estanterías cromadas","cat":"frio","color":"#1f5fa8","catName":"Refrigeración","zoneN":"K","zoneName":"Cámara de producto terminado (1–4 °C)"},{"id":49,"zone":"camPT","name":"Estantería cromada (frente de cámara)","use":"Viandas en cajas, sin apoyar sobre el piso.","u":"U04","kind":"estanteria","x":1480,"y":1145,"w":250,"d":45,"h":180,"levels":5,"p":1,"st":9,"cold":true,"short":"Estantería cromada","cat":"frio","color":"#1f5fa8","catName":"Refrigeración","zoneN":"K","zoneName":"Cámara de producto terminado (1–4 °C)"},{"id":50,"zone":"camPT","name":"Carro portabandejas de viandas","use":"Mover lotes completos a expedición.","u":"U04","kind":"carroGN","x":1680,"y":1000,"w":55,"d":70,"h":160,"p":1,"short":"Carro portabandejas de viandas","cat":"transporte","color":"#6c7a89","catName":"Carros y transporte","zoneN":"K","zoneName":"Cámara de producto terminado (1–4 °C)"},{"id":51,"zone":"exped","name":"Mesa de expedición con termómetro y registro","use":"Control de temperatura (≤ 4 °C) y remito con lote antes de cargar.","u":"U13","kind":"mesa","x":1020,"y":914,"w":140,"d":70,"h":90,"wall":"back","p":1,"st":10,"short":"Mesa de expedición con termómetro y registro","cat":"mesa","color":"#404040","catName":"Mesadas y mesas inox","zoneN":"L","zoneName":"Expedición"},{"id":52,"zone":"exped","name":"Zorra de carga","use":"Llevar cajas de viandas hasta el transporte refrigerado del cliente.","u":"U04","kind":"zorra","x":1180,"y":925,"w":60,"d":90,"h":95,"p":1,"short":"Zorra de carga","cat":"transporte","color":"#6c7a89","catName":"Carros y transporte","zoneN":"L","zoneName":"Expedición"},{"id":53,"zone":"vest","name":"Lockers de doble compartimento (ropa de calle / uniforme)","use":"Separar la ropa de calle del uniforme limpio.","u":"BPM","kind":"lockers","x":950,"y":925,"w":45,"d":200,"h":180,"wall":"right","p":1,"short":"Lockers de doble compartimento","cat":"personal","color":"#909497","catName":"Personal","zoneN":"M","zoneName":"Vestuarios y sanitarios"},{"id":54,"zone":"vest","name":"Banco","use":"Cambio de calzado.","u":"BPM","kind":"banco","x":800,"y":1000,"w":120,"d":40,"h":45,"p":1,"short":"Banco","cat":"personal","color":"#909497","catName":"Personal","zoneN":"M","zoneName":"Vestuarios y sanitarios"},{"id":55,"zone":"vest","name":"Inodoro (baño del personal)","use":"Sanitario sin comunicación directa con producción.","u":"BPM","kind":"inodoro","x":716,"y":1125,"w":38,"d":65,"h":40,"p":1,"short":"Inodoro","cat":"personal","color":"#909497","catName":"Personal","zoneN":"M","zoneName":"Vestuarios y sanitarios"},{"id":56,"zone":"vest","name":"Lavamanos","use":"Lavado de manos al salir del baño y antes de pasar a producción.","u":"BPM","kind":"lavamanos","x":660,"y":905,"w":50,"d":40,"h":85,"wall":"back","p":1,"short":"Lavamanos","cat":"higiene","color":"#7d3c98","catName":"Higiene y lavado","zoneN":"M","zoneName":"Vestuarios y sanitarios"},{"id":57,"zone":"ofic","name":"Escritorio y archivo de registros","use":"Planillas de temperatura, lotes, remitos y capacitación del personal.","u":"U01","kind":"mesa","x":505,"y":1110,"w":135,"d":70,"h":75,"wall":"front","office":true,"p":1,"short":"Escritorio y archivo de registros","cat":"personal","color":"#909497","catName":"Personal","zoneN":"N","zoneName":"Oficina"}],"flows":[{"key":"aves","name":"Pollo → milanesa","color":"#d62728","pts":[[205,1210],[205,1010],[350,960],[350,905],[350,760],[400,730],[455,730],[545,730],[545,590],[615,590],[690,590],[870,590],[870,455],[870,400],[620,400],[620,170],[703,170],[703,150],[517,150],[517,190],[1150,190],[1405,190],[1485,190],[1560,270],[1560,355],[1560,420],[1745,420],[1745,580],[1600,595],[1640,760],[1670,905],[1640,990],[1500,1060],[1405,1060],[1200,1060],[1200,1210]]},{"key":"papas","name":"Papa → puré y papas españolas","color":"#f39c12","pts":[[230,1210],[230,1120],[105,990],[105,905],[105,720],[105,555],[105,450],[120,300],[200,262],[300,255],[330,330],[455,330],[560,330],[560,205],[780,205],[960,205],[1150,205],[1405,210],[1500,210],[1590,290],[1590,355],[1590,440],[1730,440],[1730,565],[1620,615],[1620,760],[1650,840],[1650,905],[1620,975],[1480,1040],[1405,1040],[1180,1040],[1180,1210]]},{"key":"pan","name":"Pan → pan rallado → empanado","color":"#7d8a2e","pts":[[255,1210],[255,1150],[130,1000],[130,905],[130,760],[130,555],[200,470],[330,290],[380,500],[455,500],[500,520],[600,600],[640,636]]},{"key":"resid","name":"Residuos","color":"#6e4b2a","pts":[[600,600],[500,520],[455,500],[380,460],[300,430],[200,420],[185,280],[185,180],[170,155],[170,110],[360,60],[360,-10]]},{"key":"personal","name":"Personal","color":"#2e6da4","pts":[[835,1210],[835,1150],[880,1060],[885,960],[885,895],[845,840]]}],"stations":[{"n":1,"short":"Recepción","what":"pechugas a ≤ 4 °C, control con termómetro de pinche","t":3,"zone":"recep","at":1,"zoneN":"A","zoneName":"Recepción y control","eq":["1 Balanza de plataforma 0–150 kg","2 Mesa de recepción inox con estante y termómetro de pinche"]},{"n":2,"short":"Cámara de MP","what":"conservación a 0–4 °C","t":2,"zone":"camMP","at":4,"zoneN":"C","zoneName":"Cámara de MP (0–4 °C)","eq":["7 Cámara modular de MP 0–4 °C con estanterías cromadas","8 Estantería reticulada cromada"]},{"n":3,"short":"Desposte y fileteado","what":"deshuesado, láminas de 1 cm, tiernizado","t":6,"zone":"aves","at":9,"zoneN":"F","zoneName":"Preparación de aves y empanado","eq":["17 Mesa de desposte con bacha","18 Tiernizador de carnes","19 Mesa de trabajo inox","20 Cortadora de disco oblicuo","21 Refrigerador bajo mesada"]},{"n":4,"short":"Empanado","what":"batido de huevo y pan rallado tamizado","t":6,"zone":"aves","at":10,"zoneN":"F","zoneName":"Preparación de aves y empanado","eq":["22 Puesto de empanado manual con tamiz vibratorio"]},{"n":5,"short":"Prefritura","what":"2 min en aceite a 175 °C: el empanado se dora","t":45,"zone":"coccion","at":16,"zoneN":"G","zoneName":"Cocción","eq":["27 Freidora eléctrica de 2 cubas en V"]},{"n":6,"short":"Horno combinado","what":"aire seco a 180 °C hasta 74 °C en el centro","t":78,"zone":"coccion","at":18,"zoneN":"G","zoneName":"Cocción","eq":["25 Horno combinado eléctrico 10 GN 1/1 con soporte"]},{"n":7,"short":"Abatidor","what":"de 78 °C a 3 °C en ≤ 90 min","t":3,"zone":"abat","chill":{"from":78,"air":-2,"limit":90,"to":3},"at":22,"zoneN":"I","zoneName":"Enfriamiento rápido","eq":["41 Abatidor de temperatura 15 GN 1/1 con sensor de aguja"]},{"n":8,"short":"Envasado","what":"porcionado y termosellado en sala a ≤ 12 °C","t":4,"zone":"envas","at":28,"zoneN":"J","zoneName":"Envasado (sala a ≤ 12 °C)","eq":["43 Mesa de porcionado inox con balanza de precisión","44 Termoselladora de bandejas"]},{"n":9,"short":"Cámara de PT","what":"1–4 °C, hasta 5 días","t":2,"zone":"camPT","at":31,"zoneN":"K","zoneName":"Cámara de producto terminado (1–4 °C)","eq":["48 Cámara modular de PT 1–4 °C con estanterías cromadas","49 Estantería cromada"]},{"n":10,"short":"Expedición","what":"control ≤ 4 °C y carga al transporte del cliente","t":3,"zone":"exped","at":34,"zoneN":"L","zoneName":"Expedición","eq":["51 Mesa de expedición con termómetro y registro"]}],"prod":{"viandas":250,"conPure":125,"conEspanolas":125,"dias":"lunes a viernes","turno":"6:00 a 15:00","personal":5}};
+const M = (cm) => cm / 100;
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const $ = (id) => document.getElementById(id);
+const canvas = $("gl");
+const stage = canvas.parentElement;
+
+let renderer;
+try {
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true, preserveDrawingBuffer: true });
+} catch (e) {
+  stage.insertAdjacentHTML("beforeend", '<div class="err">Este navegador no puede mostrar gráficos 3D (WebGL desactivado). Las láminas 1 a 5 tienen la misma información en 2D.</div>');
+  throw e;
+}
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200);
+const labels = new CSS2DRenderer({ element: $("labels") });
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.maxPolarAngle = Math.PI * 0.495;
+controls.minDistance = 3;
+controls.maxDistance = 60;
+const CX = M(D.local.w) / 2;
+const CZ = M(D.local.d) / 2;
+controls.target.set(CX, 0.4, CZ);
+
+// ---------------------------------------------------------------- luz y tema
+const hemi = new THREE.HemisphereLight(0xffffff, 0x8a96a3, 1.6);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+sun.position.set(CX - 8, 18, CZ - 10);
+sun.target.position.set(CX, 0, CZ);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -13, right: 13, top: 13, bottom: -13, near: 1, far: 50 });
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.02;
+scene.add(sun, sun.target);
+function applyTheme() {
+  const cs = getComputedStyle(document.documentElement);
+  scene.background = new THREE.Color(cs.getPropertyValue("--scene").trim() || "#e4e9ed");
+}
+applyTheme();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+// ---------------------------------------------------------------- utilidades de modelado
+const EDGE = new THREE.LineBasicMaterial({ color: 0x27323c, transparent: true, opacity: 0.55 });
+const matCache = new Map();
+function mat(color, opts = {}) {
+  const key = color + JSON.stringify(opts);
+  if (!matCache.has(key)) matCache.set(key, new THREE.MeshStandardMaterial({ color, roughness: 0.62, metalness: 0.05, ...opts }));
+  return matCache.get(key);
+}
+const tint = (hex, k) => "#" + new THREE.Color(hex).lerp(new THREE.Color("#ffffff"), k).getHexString();
+const pickables = [];
+// caja en cm: x, y (planta), z (altura), w, d, h
+function box(parent, x, y, z, w, d, h, material, { edges = true, shadow = true } = {}) {
+  const g = new THREE.BoxGeometry(M(w), M(h), M(d));
+  const m = new THREE.Mesh(g, material);
+  m.position.set(M(x + w / 2), M(z + h / 2), M(y + d / 2));
+  m.castShadow = shadow;
+  m.receiveShadow = true;
+  if (edges) m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), EDGE));
+  parent.add(m);
+  return m;
+}
+function cyl(parent, cx, cy, z, r, h, material, { r2 = r, seg = 28 } = {}) {
+  const g = new THREE.CylinderGeometry(M(r2), M(r), M(h), seg);
+  const m = new THREE.Mesh(g, material);
+  m.position.set(M(cx), M(z + h / 2), M(cy));
+  m.castShadow = true;
+  m.receiveShadow = true;
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 30), EDGE));
+  parent.add(m);
+  return m;
+}
+
+// ---------------------------------------------------------------- piso y zonas
+const W = M(D.local.w);
+const Dd = M(D.local.d);
+const base = new THREE.Mesh(new THREE.BoxGeometry(W + 1.2, 0.2, Dd + 1.2), mat("#c7cdd2"));
+base.position.set(CX, -0.1, CZ);
+base.receiveShadow = true;
+scene.add(base);
+const zoneLabels = [];
+for (const z of D.zones) {
+  const m = new THREE.Mesh(new THREE.PlaneGeometry(M(z.w), M(z.d)), mat(z.fill, { roughness: 0.9 }));
+  m.rotation.x = -Math.PI / 2;
+  m.position.set(M(z.x + z.w / 2), 0.002, M(z.y + z.d / 2));
+  m.receiveShadow = true;
+  scene.add(m);
+  const el = document.createElement("div");
+  el.className = "zlabel";
+  el.innerHTML = "<b>" + z.n + "</b><span>" + z.name.replace(/ \(.*\)/, "") + "</span>";
+  const lab = new CSS2DObject(el);
+  lab.position.set(M(z.x + z.w / 2), 0.05, M(z.y + z.d / 2));
+  scene.add(lab);
+  zoneLabels.push(lab);
+}
+// cuadrícula de 1 m
+const gridPts = [];
+for (let x = 0; x <= D.local.w; x += 100) gridPts.push(M(x), 0.004, 0, M(x), 0.004, Dd);
+for (let y = 0; y <= D.local.d; y += 100) gridPts.push(0, 0.004, M(y), W, 0.004, M(y));
+const gridGeo = new THREE.BufferGeometry();
+gridGeo.setAttribute("position", new THREE.Float32BufferAttribute(gridPts, 3));
+scene.add(new THREE.LineSegments(gridGeo, new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.55 })));
+
+// ---------------------------------------------------------------- muros y puertas (se recortan con el control de altura)
+const ALTO = M(D.local.alto);
+const wallGroup = new THREE.Group();
+scene.add(wallGroup);
+const wallMats = { ext: mat("#5b6670"), int: mat("#9aa5ae"), panel: mat("#a9cbe6") };
+for (const r of D.walls) {
+  const g = new THREE.BoxGeometry(M(r.w), 1, M(r.h));
+  g.translate(0, 0.5, 0);
+  const m = new THREE.Mesh(g, wallMats[r.kind] || wallMats.int);
+  m.position.set(M(r.x + r.w / 2), 0, M(r.y + r.h / 2));
+  m.castShadow = true;
+  m.receiveShadow = true;
+  m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), EDGE));
+  wallGroup.add(m);
+}
+const leafMat = mat("#f2efe8");
+const doorLeaves = [];
+const arcPts = [];
+for (const d of D.doors) {
+  for (const l of d.leaves) {
+    const [hx, hy] = l.H;
+    const [lx, ly] = l.L;
+    const len = Math.hypot(lx - hx, ly - hy);
+    const g = new THREE.BoxGeometry(M(len), 1, 0.04);
+    g.translate(M(len) / 2, 0.5, 0);
+    const m = new THREE.Mesh(g, leafMat);
+    m.position.set(M(hx), 0, M(hy));
+    m.rotation.y = -Math.atan2(ly - hy, lx - hx);
+    m.castShadow = true;
+    m.add(new THREE.LineSegments(new THREE.EdgesGeometry(g), EDGE));
+    scene.add(m);
+    doorLeaves.push(m);
+    for (let i = 1; i < l.arc.length; i++) arcPts.push(M(l.arc[i - 1][0]), 0.006, M(l.arc[i - 1][1]), M(l.arc[i][0]), 0.006, M(l.arc[i][1]));
+  }
+}
+const arcGeo = new THREE.BufferGeometry();
+arcGeo.setAttribute("position", new THREE.Float32BufferAttribute(arcPts, 3));
+const arcLines = new THREE.LineSegments(arcGeo, new THREE.LineDashedMaterial({ color: 0x4b5864, dashSize: 0.08, gapSize: 0.06 }));
+arcLines.computeLineDistances();
+scene.add(arcLines);
+function setWallHeight(h) {
+  for (const m of wallGroup.children) m.scale.y = h;
+  for (const m of doorLeaves) m.scale.y = Math.min(h, 2.05);
+  $("wallHOut").textContent = h.toFixed(2).replace(".", ",") + " m de 2,80 m";
+}
+
+// ---------------------------------------------------------------- equipos
+const STEEL = "#dfe3e6";
+const DARK = mat("#2b3238", { roughness: 0.4 });
+const GLASS = mat("#3d5566", { roughness: 0.15, metalness: 0.2 });
+const WHITE = mat("#fbfbfa");
+const numLabels = [];
+let hood = null;
+const byId = new Map(D.equip.map((e) => [e.id, e]));
+function frontOf(e) {
+  return e.wall === "front" ? "-y" : e.wall === "left" ? "+x" : e.wall === "right" ? "-x" : "+y";
+}
+function buildEquip(e) {
+  const g = new THREE.Group();
+  g.userData.eq = e;
+  const body = mat(tint(e.color, 0.72));
+  const accent = mat(tint(e.color, 0.35));
+  const steel = mat(STEEL, { metalness: 0.35, roughness: 0.45 });
+  const z0 = e.on ? byId.get(e.on).h : 0;
+  const { x, y, w, d, h } = e;
+  const legs = (top, inset = 4, s = 4) => {
+    for (const [lx, ly] of [[x + inset, y + inset], [x + w - inset - s, y + inset], [x + inset, y + d - inset - s], [x + w - inset - s, y + d - inset - s]]) box(g, lx, ly, 0, s, s, top, steel, { edges: false });
+  };
+  switch (e.kind) {
+    case "mesa": {
+      legs(h - 4);
+      box(g, x + 3, y + 3, 16, w - 6, d - 6, 2.5, steel);
+      box(g, x, y, h - 4, w, d, 4, body);
+      if (e.wall) {
+        const f = frontOf(e);
+        if (f === "+y") box(g, x, y, h, w, 2, 12, body);
+        if (f === "-y") box(g, x, y + d - 2, h, w, 2, 12, body);
+        if (f === "+x") box(g, x, y, h, 2, d, 12, body);
+        if (f === "-x") box(g, x + w - 2, y, h, 2, d, 12, body);
+      }
+      if (e.bachas) {
+        const long = w >= d;
+        const len = long ? w : d;
+        const each = (len - 10) / e.bachas;
+        for (let i = 0; i < e.bachas; i++) {
+          const a = 5 + i * each + 3;
+          if (long) box(g, x + a, y + 9, h - 1, each - 6, d - 18, 1.2, DARK, { edges: false, shadow: false });
+          else box(g, x + 9, y + a, h - 1, w - 18, each - 6, 1.2, DARK, { edges: false, shadow: false });
+        }
+      }
+      if (e.scale) box(g, x + w / 2 - 15, y + d / 2 - 15, h, 30, 30, 6, WHITE);
+      if (e.label) box(g, x + w - 40, y + 15, h, 30, 25, 18, WHITE);
+      if (e.office) box(g, x + 20, y + 15, h, 45, 30, 28, DARK);
+      break;
+    }
+    case "empanador": {
+      legs(h - 4);
+      box(g, x, y, h - 4, w, d, 4, body);
+      for (let i = 0; i < 3; i++) box(g, x + 15 + i * ((w - 30) / 3), y + 15, h, (w - 30) / 3 - 12, d - 30, 7, i === 1 ? mat("#e3c98f") : WHITE);
+      break;
+    }
+    case "combi": {
+      const stand = 70;
+      legs(stand - 3, 5);
+      box(g, x + 3, y + 3, 18, w - 6, d - 6, 2.5, steel);
+      box(g, x, y, stand - 3, w, d, 3, steel);
+      box(g, x, y, stand, w, d, h - stand, body);
+      box(g, x + 8, y + d - 0.5, stand + 14, w * 0.66, 1.5, h - stand - 28, GLASS, { edges: false });
+      box(g, x + w * 0.76, y + d - 0.5, stand + 50, w * 0.18, 1.5, 36, DARK, { edges: false });
+      break;
+    }
+    case "freidora": {
+      box(g, x, y, 10, w, d, 80, body);
+      for (const lx of [x + 4, x + w - 8]) for (const ly of [y + 4, y + d - 8]) box(g, lx, ly, 0, 4, 4, 10, steel, { edges: false });
+      for (let i = 0; i < e.cubas; i++) box(g, x + 5 + (i * (w - 6)) / e.cubas, y + 22, 89.5, (w - 6) / e.cubas - 4, d - 34, 1, mat("#c9a34a", { roughness: 0.3 }), { edges: false });
+      box(g, x, y, 90, w, 12, 22, body);
+      break;
+    }
+    case "marmita": {
+      box(g, x, y + 15, 0, 18, d - 30, 78, body);
+      box(g, x + w - 18, y + 15, 0, 18, d - 30, 78, body);
+      const b = cyl(g, x + w / 2, y + 50, 32, 42, 58, body, { r2: 44 });
+      cyl(g, x + w / 2, y + 50, 89.5, 38, 1, mat("#f0d79a"), { seg: 28 });
+      box(g, x + w / 2 - 6, y + 2, 90, 12, 12, 60, steel);
+      box(g, x + w / 2 - 6, y + 2, 150, 12, 40, 6, steel);
+      break;
+    }
+    case "campana": {
+      const z = e.z;
+      const m = box(g, x, y, z, w, d, e.h, mat(tint(e.color, 0.55), { transparent: true, opacity: 0.55, depthWrite: false }), { shadow: false });
+      box(g, x + w / 2 - 25, y, z + e.h, 50, 40, D.local.alto - z - e.h, mat(tint(e.color, 0.55), { transparent: true, opacity: 0.55, depthWrite: false }), { shadow: false });
+      hood = g;
+      break;
+    }
+    case "estanteria": {
+      const lv = e.levels || 4;
+      const post = 3;
+      for (const [px, py] of [[x, y], [x + w - post, y], [x, y + d - post], [x + w - post, y + d - post]]) box(g, px, py, 0, post, post, h, steel, { edges: false });
+      for (let i = 0; i < lv; i++) box(g, x, y, 15 + (i * (h - 25)) / (lv - 1), w, d, 2.5, e.cold ? mat("#cfe2f2") : body);
+      break;
+    }
+    case "dunnage": {
+      for (let i = 0; i < 6; i++) box(g, x + (i * (w - 6)) / 5, y, 0, 6, d, h - 4, body, { edges: false });
+      box(g, x, y, h - 4, w, d, 4, body);
+      for (let i = 0; i < 3; i++) box(g, x + 4, y + 8 + i * 82, h, w - 8, 72, 18, mat("#cdb38b"));
+      break;
+    }
+    case "peladora":
+    case "secador":
+      cyl(g, x + w / 2, y + d / 2, 0, w / 2 - 6, 30, steel);
+      cyl(g, x + w / 2, y + d / 2, 30, w / 2, h - 30, body);
+      break;
+    case "bidon":
+      cyl(g, x + w / 2, y + d / 2, 0, w / 2, h, body);
+      break;
+    case "lavamanos":
+      box(g, x + w / 2 - 6, y + (e.wall === "front" ? d - 14 : 2), 0, 12, 12, 62, steel, { edges: false });
+      box(g, x, y, 62, w, d, 22, body);
+      box(g, x + 6, y + 6, 83.5, w - 12, d - 12, 1, DARK, { edges: false, shadow: false });
+      break;
+    case "carroGN":
+      for (const [px, py] of [[x, y], [x + w - 3, y], [x, y + d - 3], [x + w - 3, y + d - 3]]) box(g, px, py, 6, 3, 3, h - 6, steel, { edges: false });
+      for (let i = 0; i < 8; i++) box(g, x + 3, y + 3, 20 + i * 17, w - 6, d - 6, 1.5, i % 2 ? WHITE : body, { edges: false });
+      box(g, x, y, h - 2, w, d, 2, body);
+      break;
+    case "zorra":
+      box(g, x, y, 8, w, d, 6, body);
+      box(g, x + 4, y, 14, w - 8, 3, h - 14, steel);
+      break;
+    case "contenedores":
+      for (let i = 0; i < 3; i++) box(g, x + i * (w / 3) + 2, y, 0, w / 3 - 4, d, h, i === 0 ? mat("#8fae7d") : i === 1 ? mat("#7d9fc2") : mat("#a69a8a"));
+      break;
+    case "balanzaPiso":
+      box(g, x, y, 0, w, d, h, body);
+      box(g, x + 4, y + d - 6, h, 5, 5, 90, steel, { edges: false });
+      box(g, x - 4, y + d - 10, 95, 26, 8, 16, DARK);
+      break;
+    case "inodoro":
+      box(g, x + 4, y + 14, 0, w - 8, d - 18, 40, WHITE);
+      box(g, x, y + d - 18, 40, w, 18, 36, WHITE);
+      break;
+    case "banco":
+      box(g, x, y, 40, w, d, 5, body);
+      box(g, x + 5, y + 5, 0, 5, d - 10, 40, steel, { edges: false });
+      box(g, x + w - 10, y + 5, 0, 5, d - 10, 40, steel, { edges: false });
+      break;
+    default: {
+      box(g, x, y, z0, w, d, h, body);
+      if (["abatidor", "bajoMesada", "armario", "lockers"].includes(e.kind)) {
+        const f = frontOf(e);
+        const n = e.kind === "lockers" ? 4 : e.kind === "bajoMesada" ? 2 : 1;
+        for (let i = 0; i < n; i++) {
+          if (f === "+y") box(g, x + 3 + (i * (w - 6)) / n, y + d, z0 + 6, (w - 6) / n - 2, 1, h - 12, accent, { edges: false });
+          if (f === "+x") box(g, x + w, y + 3 + (i * (d - 6)) / n, z0 + 6, 1, (d - 6) / n - 2, h - 12, accent, { edges: false });
+          if (f === "-x") box(g, x - 1, y + 3 + (i * (d - 6)) / n, z0 + 6, 1, (d - 6) / n - 2, h - 12, accent, { edges: false });
+        }
+      }
+      if (e.kind === "cortadora") cyl(g, x + w / 2, y + d / 2, z0 + h, 15, 3, steel);
+    }
+  }
+  g.traverse((o) => { if (o.isMesh) { o.userData.eq = e; pickables.push(o); } });
+  scene.add(g);
+  const el = document.createElement("div");
+  el.className = "nlabel";
+  el.textContent = e.id;
+  const lab = new CSS2DObject(el);
+  const top = e.kind === "campana" ? e.z + e.h : z0 + h;
+  lab.position.set(M(x + w / 2), M(top) + 0.12, M(y + d / 2));
+  lab.visible = false;
+  scene.add(lab);
+  numLabels.push(lab);
+  return g;
+}
+const eqGroups = new Map(D.equip.map((e) => [e.id, buildEquip(e)]));
+
+// ---------------------------------------------------------------- flujos: líneas gruesas con trazos que avanzan y flechas
+const flowObjs = new Map();
+const lineMats = [];
+const LIFT = { aves: 0.05, papas: 0.065, pan: 0.08, resid: 0.095, personal: 0.11 };
+for (const f of D.flows) {
+  const grp = new THREE.Group();
+  const pts = f.pts.map(([x, y]) => new THREE.Vector3(M(x), LIFT[f.key], M(y)));
+  const geo = new LineGeometry();
+  geo.setPositions(pts.flatMap((p) => [p.x, p.y, p.z]));
+  const lm = new LineMaterial({ color: f.color, linewidth: f.key === "aves" ? 5 : 4, dashed: true, dashSize: f.key === "personal" ? 0.08 : 0.32, gapSize: f.key === "personal" ? 0.12 : 0.14, worldUnits: false });
+  lineMats.push(lm);
+  const line = new Line2(geo, lm);
+  line.computeLineDistances();
+  grp.add(line);
+  const coneMat = new THREE.MeshBasicMaterial({ color: f.color });
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1];
+    const b = pts[i];
+    const len = a.distanceTo(b);
+    if (len < 0.9 && i !== pts.length - 1) continue;
+    const c = new THREE.Mesh(new THREE.ConeGeometry(0.075, 0.2, 14), coneMat);
+    const t = i === pts.length - 1 ? 1 : 0.55;
+    c.position.lerpVectors(a, b, t);
+    c.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize());
+    grp.add(c);
+  }
+  scene.add(grp);
+  flowObjs.set(f.key, grp);
+}
+
+// ---------------------------------------------------------------- bandeja con milanesas que recorre las estaciones
+const route = D.flows.find((f) => f.key === "aves").pts.map(([x, y]) => new THREE.Vector3(M(x), 0, M(y)));
+const cum = [0];
+for (let i = 1; i < route.length; i++) cum.push(cum[i - 1] + route[i].distanceTo(route[i - 1]));
+const stopDist = D.stations.map((s) => cum[s.at]);
+const token = new THREE.Group();
+const tray = new THREE.Mesh(new THREE.BoxGeometry(0.33, 0.04, 0.27), mat("#d7dde2", { metalness: 0.5, roughness: 0.35 }));
+tray.castShadow = true;
+tray.add(new THREE.LineSegments(new THREE.EdgesGeometry(tray.geometry), EDGE));
+token.add(tray);
+const milMat = mat("#d9a441", { roughness: 0.7 });
+for (const [ox, oz] of [[-0.08, -0.05], [0.08, -0.05], [0, 0.06]]) {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(0.06, 20, 10), milMat);
+  m.scale.set(1.15, 0.22, 0.8);
+  m.position.set(ox, 0.03, oz);
+  m.castShadow = true;
+  token.add(m);
+}
+const halo = new THREE.Mesh(new THREE.RingGeometry(0.22, 0.3, 40), new THREE.MeshBasicMaterial({ color: 0x2f74c0, transparent: true, opacity: 0.85, side: THREE.DoubleSide }));
+halo.rotation.x = -Math.PI / 2;
+const pin = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 1, 8), new THREE.MeshBasicMaterial({ color: 0x27323c }));
+scene.add(token, halo, pin);
+const CARRY = 1.0;
+
+const tempColor = (t) => {
+  const cs = getComputedStyle(document.documentElement);
+  const cold = new THREE.Color(cs.getPropertyValue("--cold").trim());
+  const warm = new THREE.Color(cs.getPropertyValue("--warm").trim());
+  const hot = new THREE.Color(cs.getPropertyValue("--hot").trim());
+  if (t <= 5) return cold;
+  if (t < 45) return cold.clone().lerp(warm, (t - 5) / 40);
+  return warm.clone().lerp(hot, Math.min(1, (t - 45) / 30));
+};
+
+let dist = stopDist[0];
+let stationIdx = 0;
+let playing = false;
+let speed = 1;
+let dwell = 0;
+const WALK = 1.6; // m/s a velocidad 1×
+const DWELL = 2.2; // s de parada en cada estación
+function pointAt(s) {
+  s = Math.max(0, Math.min(cum[cum.length - 1], s));
+  let i = 1;
+  while (i < cum.length - 1 && cum[i] < s) i++;
+  const t = (s - cum[i - 1]) / (cum[i] - cum[i - 1] || 1);
+  return { p: route[i - 1].clone().lerp(route[i], t), dir: route[i].clone().sub(route[i - 1]).normalize() };
+}
+function tempAt(s) {
+  for (let i = 0; i < stopDist.length - 1; i++) {
+    if (s <= stopDist[i + 1]) {
+      const a = D.stations[i];
+      const b = D.stations[i + 1];
+      const t = (s - stopDist[i]) / (stopDist[i + 1] - stopDist[i] || 1);
+      return a.t + (b.t - a.t) * Math.max(0, Math.min(1, t));
+    }
+  }
+  return D.stations[D.stations.length - 1].t;
+}
+function placeToken() {
+  const { p, dir } = pointAt(dist);
+  token.position.set(p.x, CARRY, p.z);
+  token.rotation.y = Math.atan2(-dir.z, dir.x);
+  halo.position.set(p.x, 0.012, p.z);
+  pin.position.set(p.x, CARRY / 2, p.z);
+  pin.scale.y = CARRY;
+  const t = tempAt(dist);
+  halo.material.color.copy(tempColor(t));
+  return t;
+}
+
+// ---------------------------------------------------------------- panel
+const list = $("stList");
+D.stations.forEach((s, i) => {
+  const li = document.createElement("li");
+  li.innerHTML = '<button type="button"><span class="k">' + s.n + "</span><span>" + s.short + " <span class=\"k\">" + s.zoneN + '</span></span><span class="t">' + s.t + " °C</span></button>";
+  li.querySelector("button").addEventListener("click", () => goStation(i, true));
+  list.appendChild(li);
+});
+const flowBox = $("flowToggles");
+for (const f of D.flows) {
+  const l = document.createElement("label");
+  l.innerHTML = '<input type="checkbox" checked data-flow="' + f.key + '"><span class="sw" style="background:' + f.color + '"></span>' + f.name;
+  l.querySelector("input").addEventListener("change", (ev) => { flowObjs.get(f.key).visible = ev.target.checked; if (f.key === "aves") { token.visible = halo.visible = pin.visible = ev.target.checked; } });
+  flowBox.appendChild(l);
+}
+const hlCache = new Map();
+function hlMat(m) {
+  if (!hlCache.has(m)) { const c = m.clone(); c.emissive = new THREE.Color(0xb4462a); c.emissiveIntensity = 0.32; hlCache.set(m, c); }
+  return hlCache.get(m);
+}
+function showStation(i) {
+  const s = D.stations[i];
+  $("stN").textContent = "Estación " + s.n + " de " + D.stations.length;
+  $("stZone").textContent = s.zoneN + " · " + s.zoneName.replace(/ \(.*\)/, "");
+  $("stName").textContent = s.short;
+  $("stWhat").textContent = s.what.charAt(0).toUpperCase() + s.what.slice(1) + ".";
+  $("stEq").innerHTML = s.eq.length ? "Equipos: " + s.eq.map((t) => "<span>" + t + "</span>").join("") : "";
+  list.querySelectorAll("button").forEach((b, k) => (k === i ? b.setAttribute("aria-current", "step") : b.removeAttribute("aria-current")));
+  for (const [id, g] of eqGroups) {
+    const on = byId.get(id).st === s.n;
+    g.traverse((o) => {
+      if (!o.isMesh || !o.material.emissive) return;
+      if (on) { if (!o.userData.base) o.userData.base = o.material; o.material = hlMat(o.userData.base); }
+      else if (o.userData.base) o.material = o.userData.base;
+    });
+  }
+}
+function setTempReadout(t) {
+  $("stTemp").innerHTML = Math.round(t) + "<small>°C en el centro</small>";
+  $("thermoMark").style.left = Math.max(1, Math.min(99, (t / 80) * 100)) + "%";
+}
+function goStation(i, fly) {
+  stationIdx = Math.max(0, Math.min(D.stations.length - 1, i));
+  dist = stopDist[stationIdx];
+  dwell = 0;
+  setTempReadout(placeToken());
+  showStation(stationIdx);
+  if (fly && view !== "follow") {
+    view = "free";
+    document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", "false"));
+    flyTo(token.position.clone().add(FOLLOW), token.position.clone().setY(0.6));
+  }
+}
+function setPlaying(p) {
+  playing = p;
+  $("playBtn").textContent = p ? "Pausa" : "Reproducir";
+}
+$("playBtn").addEventListener("click", () => {
+  if (!playing && stationIdx === D.stations.length - 1 && dist >= cum[cum.length - 1] - 0.01) goStation(0, false);
+  setPlaying(!playing);
+});
+$("prev").addEventListener("click", () => { setPlaying(false); goStation(stationIdx - (dist > stopDist[stationIdx] + 0.05 ? 0 : 1), true); });
+$("next").addEventListener("click", () => { setPlaying(false); goStation(stationIdx + 1, true); });
+document.querySelectorAll("[data-speed]").forEach((b) => b.addEventListener("click", () => {
+  speed = +b.dataset.speed;
+  document.querySelectorAll("[data-speed]").forEach((o) => o.setAttribute("aria-pressed", String(o === b)));
+}));
+$("optZones").addEventListener("change", (e) => zoneLabels.forEach((l) => (l.visible = e.target.checked)));
+$("optNums").addEventListener("change", (e) => numLabels.forEach((l) => (l.visible = e.target.checked)));
+$("optHood").addEventListener("change", (e) => { if (hood) hood.visible = e.target.checked; });
+$("wallH").addEventListener("input", (e) => setWallHeight(+e.target.value));
+$("togglePanel").addEventListener("click", () => {
+  const p = $("panel");
+  const min = p.classList.toggle("min");
+  $("togglePanel").textContent = min ? "Mostrar panel" : "Ocultar panel";
+  $("togglePanel").setAttribute("aria-expanded", String(!min));
+  resize();
+});
+
+// ---------------------------------------------------------------- cámaras
+let view = "iso";
+const BOX = [];
+for (const x of [0, W]) for (const y of [0, 1.6]) for (const z of [0, Dd]) BOX.push(new THREE.Vector3(x, y, z));
+const DIRS = { iso: new THREE.Vector3(-0.5, 0.78, 0.72).normalize(), isoTall: new THREE.Vector3(-0.85, 0.95, 0.3).normalize(), top: new THREE.Vector3(0, 1, 0.015).normalize(), topTall: new THREE.Vector3(-1, 0.0, 0).multiplyScalar(0.015).add(new THREE.Vector3(0, 1, 0)).normalize(), front: new THREE.Vector3(0.04, 0.62, 1).normalize() };
+const tall = () => camera.aspect < 0.9;
+// distancia y centro para que todo el local entre en el lienzo, por debajo de la barra de título
+function fit(dir) {
+  const r = canvas.getBoundingClientRect();
+  const head = document.querySelector(".head").getBoundingClientRect();
+  const topLim = Math.min(0.92, 1 - (2 * (head.bottom - r.top + 10)) / r.height);
+  const botLim = -0.9;
+  const xLim = 0.92;
+  const cam = camera.clone();
+  let target = new THREE.Vector3(CX, 0.3, CZ);
+  const test = (dist) => {
+    cam.position.copy(target).addScaledVector(dir, dist);
+    cam.lookAt(target);
+    cam.updateMatrixWorld();
+    let ymin = 9, ymax = -9, ok = true;
+    for (const c of BOX) {
+      const p = c.clone().project(cam);
+      if (Math.abs(p.x) > xLim || p.z > 1) ok = false;
+      ymin = Math.min(ymin, p.y);
+      ymax = Math.max(ymax, p.y);
+    }
+    return { ok: ok && ymax <= topLim && ymin >= botLim, ymin, ymax };
+  };
+  let dist = 20;
+  for (let pass = 0; pass < 3; pass++) {
+    let lo = 2, hi = 160;
+    for (let k = 0; k < 32; k++) { const mid = (lo + hi) / 2; if (test(mid).ok) hi = mid; else lo = mid; }
+    dist = hi;
+    const { ymin, ymax } = test(dist);
+    const shift = (ymin + ymax) / 2 - (topLim + botLim) / 2;
+    const up = new THREE.Vector3(0, 1, 0).applyQuaternion(cam.quaternion);
+    const half = dist * Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
+    target = target.clone().addScaledVector(up, shift * half);
+  }
+  return [target.clone().addScaledVector(dir, dist), target];
+}
+const VIEWS = { iso: () => fit(tall() ? DIRS.isoTall : DIRS.iso), top: () => fit(tall() ? DIRS.topTall : DIRS.top), front: () => fit(DIRS.front) };
+const FOLLOW = new THREE.Vector3(-3.2, 7.2, 5.6);
+let fly = null;
+const ease = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
+function flyTo(pos, target, ms = 1100) {
+  if (reduce) ms = 0;
+  fly = { p0: camera.position.clone(), t0: controls.target.clone(), p1: pos, t1: target, start: performance.now(), ms };
+}
+function setView(v) {
+  view = v;
+  userMoved = false;
+  document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === v)));
+  if (v === "follow") {
+    const p = token.position;
+    flyTo(p.clone().add(FOLLOW), p.clone().setY(0.5), 900);
+    if (!playing && !reduce) setPlaying(true);
+  } else {
+    const [pos, tgt] = VIEWS[v]();
+    flyTo(pos, tgt);
+  }
+}
+document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view)));
+let userMoved = false;
+controls.addEventListener("start", () => { fly = null; userMoved = true; if (view === "follow") { view = "free"; document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", "false")); } });
+
+// ---------------------------------------------------------------- ficha del equipo bajo el puntero
+const ray = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+const tip = $("tip");
+let hovered = null;
+function pick(ev) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((ev.clientX - r.left) / r.width) * 2 - 1, -((ev.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(pickables.filter((m) => m.visible && (!hood || m.parent !== hood || hood.visible)), false)[0];
+  const e = hit ? hit.object.userData.eq : null;
+  if (!e) { tip.hidden = true; hovered = null; return; }
+  hovered = e;
+  tip.innerHTML = "<b>" + e.id + " · " + e.short + "</b><div>" + e.use + '</div><div class="meta">' + e.zoneN + " " + e.zoneName.replace(/ \(.*\)/, "") + " · " + e.w + " × " + e.d + " cm · alto " + (e.kind === "campana" ? "a 1,85 m" : (e.h / 100).toFixed(2).replace(".", ",") + " m") + " · " + e.u + "</div>";
+  tip.hidden = false;
+  const sr = stage.getBoundingClientRect();
+  const x = ev.clientX - sr.left + 14;
+  const y = ev.clientY - sr.top + 14;
+  tip.style.left = Math.min(x, sr.width - tip.offsetWidth - 12) + "px";
+  tip.style.top = Math.min(y, sr.height - tip.offsetHeight - 12) + "px";
+}
+let downAt = null;
+canvas.addEventListener("pointermove", (ev) => { if (ev.pointerType === "mouse" && !ev.buttons) pick(ev); });
+canvas.addEventListener("pointerdown", (ev) => { downAt = [ev.clientX, ev.clientY]; });
+canvas.addEventListener("pointerup", (ev) => { if (downAt && Math.hypot(ev.clientX - downAt[0], ev.clientY - downAt[1]) < 6) pick(ev); downAt = null; });
+canvas.addEventListener("pointerleave", () => { tip.hidden = true; });
+canvas.addEventListener("keydown", (ev) => {
+  if (ev.key === " ") { ev.preventDefault(); $("playBtn").click(); }
+  if (ev.key === "ArrowRight") $("next").click();
+  if (ev.key === "ArrowLeft") $("prev").click();
+});
+
+// ---------------------------------------------------------------- tamaño y bucle
+function resize() {
+  const r = stage.getBoundingClientRect();
+  const w = Math.max(1, r.width);
+  const h = Math.max(1, r.height);
+  renderer.setSize(w, h, false);
+  labels.setSize(w, h);
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  for (const m of lineMats) m.resolution.set(w, h);
+  if (typeof VIEWS !== "undefined" && VIEWS[view] && !userMoved && !fly) { const [p, t] = VIEWS[view](); camera.position.copy(p); controls.target.copy(t); }
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+setWallHeight(1.2);
+function home() { const [p0, t0] = VIEWS.iso(); camera.position.copy(p0); controls.target.copy(t0); }
+home();
+goStation(0, false);
+
+let last = performance.now();
+let visible = true;
+document.addEventListener("visibilitychange", () => { visible = !document.hidden; last = performance.now(); });
+function tick(now) {
+  requestAnimationFrame(tick);
+  if (!visible) return;
+  const dt = Math.min(0.05, (now - last) / 1000);
+  last = now;
+  if (!reduce) for (const m of lineMats) m.dashOffset -= dt * 0.55;
+  if (playing) {
+    const end = cum[cum.length - 1];
+    const nextStop = stationIdx + 1 < stopDist.length ? stopDist[stationIdx + 1] : end;
+    if (dist >= stopDist[stationIdx] - 1e-6 && dwell < DWELL && Math.abs(dist - stopDist[stationIdx]) < 1e-3) {
+      dwell += dt * speed;
+    } else {
+      dist = Math.min(nextStop, dist + WALK * speed * dt);
+      if (dist >= nextStop - 1e-6) {
+        if (stationIdx + 1 < stopDist.length) {
+          stationIdx++;
+          dist = stopDist[stationIdx];
+          dwell = 0;
+          showStation(stationIdx);
+        } else {
+          setPlaying(false);
+        }
+      }
+    }
+    setTempReadout(placeToken());
+    const moving = dist > stopDist[stationIdx] + 1e-3;
+    const nxt = D.stations[stationIdx + 1];
+    $("stN").textContent = moving ? (nxt ? "Hacia la estación " + nxt.n + " · " + nxt.short : "Hacia el transporte del cliente") : "Estación " + D.stations[stationIdx].n + " de " + D.stations.length;
+    if (view === "follow" && !fly) {
+      const want = token.position.clone().add(FOLLOW);
+      camera.position.lerp(want, 1 - Math.pow(0.02, dt));
+      controls.target.lerp(token.position.clone().setY(0.5), 1 - Math.pow(0.02, dt));
+    }
+  }
+  if (fly) {
+    const t = fly.ms ? Math.min(1, (now - fly.start) / fly.ms) : 1;
+    const k = ease(t);
+    camera.position.lerpVectors(fly.p0, fly.p1, k);
+    controls.target.lerpVectors(fly.t0, fly.t1, k);
+    if (t >= 1) fly = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  labels.render(scene, camera);
+}
+requestAnimationFrame(tick);
+if (matchMedia("(max-width: 820px)").matches) { $("panel").classList.add("min"); $("togglePanel").textContent = "Mostrar panel"; $("togglePanel").setAttribute("aria-expanded", "false"); resize(); }
+window.__ready = true;
+</script>
+
+</body>
+</html>
